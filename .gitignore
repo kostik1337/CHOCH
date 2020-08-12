@@ -3,3 +3,4 @@ build/
 tags
 dist*/
 todo.txt
+package-lock.json
