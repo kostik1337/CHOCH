@@ -3,6 +3,7 @@ var ctx = {};
 // @include 01_shaders.js
 // @include mathhelpers.js
 // @include gamelogic.js
+// @include audio.js
 
 function main() {
     var canvas = document.querySelector('#glcanvas');
