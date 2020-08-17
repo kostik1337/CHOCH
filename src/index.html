@@ -8,16 +8,32 @@
     <!-- @ifndef DEBUG -->
     <title>JS13K-2020</title>
     <!-- @endif -->
+
+    <style type="text/css">
+        #glcanvas {
+            position: absolute;
+            z-index: 1;
+        }
+        #canvas2d {
+            position: absolute;
+            z-index: 3;
+        }
+        #debug_div {
+            position: absolute;
+            z-index: 50;
+        }
+    </style>
 </head>
 
 <body>
     <canvas id="glcanvas" width="1200" height="675" />
+    <canvas id="canvas2d" width="1200" height="675" />
 
     <!-- @ifdef DEBUG -->
-    <div id="debug_div" />
+    <div id="debug_div"></div>
     <!-- @endif -->
     <script>
-        <!-- @include js/main.js-->
+        <!-- @include js/all.js-->
     </script>
 </body>
 

@@ -75,7 +75,7 @@ function playNote(note) {
     oscillator.start();
 }
 
-scheduleNote();
+//scheduleNote();
 
 function scheduleNote() {
     let note = sequence[Math.floor(index)];
