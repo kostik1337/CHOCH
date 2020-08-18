@@ -8,11 +8,13 @@ var gameState = {
 };
 
 var player = {
-    pos: new Vec2(1, 1),
+    pos: new Vec2(0, 0),
     maxVelocity: 0.003,
     reqSpeed: new Vec2(0, 0),
     speed: new Vec2(0, 0),
     movementStates: [0, 0, 0, 0],
+    lastCheckpointId: 0,
+    lastCheckpointPos: new Vec2(0.5, 0.1),
 
     solidNormal: null
 };
@@ -29,9 +31,19 @@ function init(gl, buf) {
     };
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    const attrPosition = gl.getAttribLocation(shaderProgram, "aPos")
+    const attrPosition = gl.getAttribLocation(shaderProgram, "aPos");
     gl.vertexAttribPointer(attrPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(attrPosition);
+
+    playerInitPos()
+    // @ifdef DEBUG
+
+    // @endif
+}
+
+function playerInitPos() {
+    player.speed.set(0, 0)
+    player.pos.set(player.lastCheckpointPos.x, player.lastCheckpointPos.y)
 }
 
 function update() {
@@ -40,10 +52,9 @@ function update() {
     if (player.solidNormal != null) {
         let dot = player.solidNormal.dot(player.speed);
         if (dot < 0) {
-            let offset = player.solidNormal.mul(-dot * 1.3);
+            let offset = player.solidNormal.mul(-dot * 1.);
             player.pos.addEq(offset.x, offset.y);
         }
-
     }
 }
 
@@ -58,8 +69,9 @@ function render(gl) {
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    var pixelValues = new Uint8Array(4);
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
+    var pixelValues = new Uint8Array(3 * 4);
+    gl.readPixels(0, 0, 3, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
+    //console.log(pixelValues);
     // solid check
     if (pixelValues[0] > 1) {
         player.solidNormal = new Vec2(
@@ -69,6 +81,14 @@ function render(gl) {
     } else {
         player.solidNormal = null;
     }
+
+    if (pixelValues[4] > 1) {
+        playerInitPos();
+    }
+    if (pixelValues[8] > 1) {
+        player.lastCheckpointPos.set(player.pos.x, player.pos.y);
+        player.lastCheckpointId = Math.round(pixelValues[9]);
+    }
 }
 
 function onKeyEvent(event, pressed) {
@@ -77,8 +97,10 @@ function onKeyEvent(event, pressed) {
 
     ms[index] = pressed;
     const speed = player.maxVelocity;
-    player.reqSpeed.y = ms[0] ? speed : ms[1] ? -speed : 0;
-    player.reqSpeed.x = ms[2] ? -speed : ms[3] ? speed : 0;
+    player.reqSpeed.set(
+        ms[2] ? -speed : ms[3] ? speed : 0,
+        ms[0] ? speed : ms[1] ? -speed : 0
+    )
 }
 
 function onMouseMove(x, y) {

@@ -25,4 +25,8 @@ class Vec2 {
         dot(v) {
                 return this.x * v.x + this.y * v.y;
         }
+        set(x, y) {
+                this.x = x
+                this.y = y
+        }
 }
