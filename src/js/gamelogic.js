@@ -2,14 +2,15 @@ const STATE_MENU = 0
 const STATE_GAME = 1
 const STATE_DEATH = 2
 
-var gameState = {
+let gameState = {
     timeUntilStart: 0,
     state: STATE_GAME
 };
 
-var player = {
+let player = {
     pos: new Vec2(0, 0),
-    maxVelocity: 0.003,
+    cam: new Vec2(0, 0),
+    maxVelocity: 0.005,
     reqSpeed: new Vec2(0, 0),
     speed: new Vec2(0, 0),
     movementStates: [0, 0, 0, 0],
@@ -19,15 +20,23 @@ var player = {
     solidNormal: null
 };
 
+// @ifdef DEBUG
+let debugInfo = {
+    fps: 0,
+    frames: 0,
+    lastTimeCheck: 0
+};
+// @endif
+
 function init(gl, buf) {
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-    var uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
+    let uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
     ctx.programInfo = {
         program: shaderProgram,
         uTime: uniformLoc("t"),
         uRes: uniformLoc("res"),
         uPos: uniformLoc("pos"),
-        uCamPos: uniformLoc("camPos"),
+        uCam: uniformLoc("cam"),
     };
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -36,8 +45,12 @@ function init(gl, buf) {
     gl.enableVertexAttribArray(attrPosition);
 
     playerInitPos()
+    player.cam.set(player.pos.x, player.pos.y)
     // @ifdef DEBUG
-
+    var fpsText = document.createElement("div")
+    fpsText.classList.add('debug')
+    debugInfo.fpsText = fpsText
+    document.querySelector("#debug_div").appendChild(fpsText);
     // @endif
 }
 
@@ -47,7 +60,7 @@ function playerInitPos() {
 }
 
 function update() {
-    player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.2);
+    player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.3);
     player.pos.addEq(player.speed.x, player.speed.y);
     if (player.solidNormal != null) {
         let dot = player.solidNormal.dot(player.speed);
@@ -56,6 +69,8 @@ function update() {
             player.pos.addEq(offset.x, offset.y);
         }
     }
+    let speedOffset = 0;
+    player.cam.mixEq(player.pos.x + player.speed.x * speedOffset, player.pos.y + player.speed.y * speedOffset, 0.1);
 }
 
 function render(gl) {
@@ -64,14 +79,12 @@ function render(gl) {
     gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
     gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
     gl.uniform2f(programInfo.uPos, player.pos.x, player.pos.y);
-    gl.uniform2f(programInfo.uCamPos, player.pos.x, player.pos.y);
-    //gl.uniform1f(programInfo.uSize, player.size);
+    gl.uniform2f(programInfo.uCam, player.cam.x, player.cam.y);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    var pixelValues = new Uint8Array(3 * 4);
+    let pixelValues = new Uint8Array(3 * 4);
     gl.readPixels(0, 0, 3, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
-    //console.log(pixelValues);
     // solid check
     if (pixelValues[0] > 1) {
         player.solidNormal = new Vec2(
@@ -85,15 +98,28 @@ function render(gl) {
     if (pixelValues[4] > 1) {
         playerInitPos();
     }
-    if (pixelValues[8] > 1) {
+
+    let checkpointId = Math.round(pixelValues[9]);
+    if (pixelValues[8] > 1 && checkpointId >= player.lastCheckpointId) {
         player.lastCheckpointPos.set(player.pos.x, player.pos.y);
-        player.lastCheckpointId = Math.round(pixelValues[9]);
+        player.lastCheckpointId = checkpointId;
     }
+
+    // @ifdef DEBUG
+    debugInfo.frames++;
+    let time = new Date().getTime();
+    if (time - debugInfo.lastTimeCheck > 1000) {
+        debugInfo.lastTimeCheck = time;
+        debugInfo.fps = debugInfo.frames;
+        debugInfo.frames = 0;
+    }
+    debugInfo.fpsText.innerHTML = `FPS: ${debugInfo.fps}`;
+    // @endif
 }
 
 function onKeyEvent(event, pressed) {
     let index = [38, 40, 37, 39].indexOf(event.which);
-    var ms = player.movementStates;
+    let ms = player.movementStates;
 
     ms[index] = pressed;
     const speed = player.maxVelocity;
