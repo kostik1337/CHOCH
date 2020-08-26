@@ -1,10 +1,11 @@
 const STATE_MENU = 0
-const STATE_GAME = 1
-const STATE_DEATH = 2
+const STATE_START_CUTSCENE = 1
+const STATE_GAME = 2
+const STATE_DEATH = 3
+const STATE_WIN = 4
 
 let gameState = {
-    timeUntilStart: 0,
-    state: STATE_GAME
+    state: STATE_MENU
 };
 
 let player = {
@@ -95,12 +96,14 @@ function render(gl) {
         player.solidNormal = null;
     }
 
-    if (pixelValues[4] > 1) {
+    let isCheckpoint = pixelValues[8] > 1
+    // death check
+    if (pixelValues[4] > 1 && !isCheckpoint) {
         playerInitPos();
     }
 
     let checkpointId = Math.round(pixelValues[9]);
-    if (pixelValues[8] > 1 && checkpointId >= player.lastCheckpointId) {
+    if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
         player.lastCheckpointPos.set(player.pos.x, player.pos.y);
         player.lastCheckpointId = checkpointId;
     }

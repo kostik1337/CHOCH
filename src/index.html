@@ -19,8 +19,7 @@
             z-index: 1;
         }
         #canvas2d {
-            position: absolute;
-            z-index: 3;
+           display: none;
         }
         #debug_div {
             position: absolute;
@@ -31,7 +30,7 @@
 
 <body>
     <canvas id="glcanvas" width="1200" height="675" ></canvas>
-    <!-- <canvas id="canvas2d" width="1200" height="675" ></canvas> -->
+    <canvas id="canvas2d" width="1200" height="675" ></canvas>
 
     <!-- @ifdef DEBUG -->
     <div id="debug_div"></div>
