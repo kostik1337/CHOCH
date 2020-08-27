@@ -40,7 +40,7 @@ function init(gl, buf) {
         uCam: uniformLoc("cam"),
     };
 
-    ctx.testTex = createTextureFromCanvas(gl, "js13k 2020 entry")
+    ctx.testTex = createCanvasPostprocTexture(gl)
     shaderProgram = initShaderProgram(gl, vsSource, canvasPostprocFsSource);
     uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
     ctx.canvasPostprocProgramInfo = {
@@ -53,7 +53,7 @@ function init(gl, buf) {
     const attrPosition = gl.getAttribLocation(shaderProgram, "aPos");
     gl.vertexAttribPointer(attrPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(attrPosition);
-    
+
     playerInitPos()
 
     player.cam.set(player.pos.x, player.pos.y)
@@ -139,15 +139,20 @@ function render(gl) {
     }
 }
 
+function setTextureCanvasData(gl, tex, canvas) {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+}
+
 function onKeyEvent(event, pressed) {
     if (gameState.state == STATE_MENU) {
         // enter
-        if (event.which == 13) { 
+        if (event.which == 13) {
             gameState.state = STATE_START_CUTSCENE
 
             print_2d([
                 "totosz@vlt1337>№", ";color='#888';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
-                
+
                 ";color='#888';ms=50;w='+'",
                 "HTTP/2 404№",
                 "content-type: text/html; charset=UTF-8№",
@@ -172,10 +177,11 @@ function onKeyEvent(event, pressed) {
                 "--please№",
 
                 "№",
-            ]).then(()=> gameState.state = STATE_GAME);
+            ], (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas))
+                .then(() => gameState.state = STATE_GAME);
         }
     } else if (gameState.state == STATE_GAME) {
-        // arrow keys: left, right, top, down
+        // arrow keys: left, right, up, down
         let index = [38, 40, 37, 39].indexOf(event.which);
         let ms = player.movementStates;
 

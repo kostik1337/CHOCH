@@ -134,7 +134,7 @@ vec3 renderLayer(vec2 uv) {
   return c;
 }
 
-#define LAYERS 10.0
+#define LAYERS 6.0
 
 void main() {
     // pixel 1 - collision check + normal
@@ -157,7 +157,7 @@ void main() {
         vec3 c = vec3(0.);
         for (float i = 0.; i<LAYERS; ++i) {
           vec2 uv1 = uv * (1.0+i/LAYERS*0.1) + vec2(0., i/LAYERS*0.1) +
-            vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.01;
+            vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.001;
           uv1 = uv1 / cameraZoom + cam; // zoom
 
           // c += renderLayer(uv1) / LAYERS;

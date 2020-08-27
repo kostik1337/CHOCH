@@ -1,4 +1,4 @@
-async function print_2d(text) {
+async function print_2d(text, canvasTextureApplyFn) {
     const lineHeight = 20;
     let print,
         ms=200,
@@ -7,7 +7,7 @@ async function print_2d(text) {
         [x, y] = [40, 40],
         font = "24px bold 'Andale Mono', 'Courier New', monospace",
         color = "#0f0",
-        ctx = textCtx;//document.querySelector("#canvas2d").getContext("2d");
+        canvasCtx = document.querySelector("#canvas2d").getContext("2d");
         
     while (tail != "№") {
         try {
@@ -18,10 +18,12 @@ async function print_2d(text) {
         catch (_) {
             await new Promise(resolve => setTimeout(resolve, ms)); // sleep. DON'T delete ';'!!!
             [_,print,tail] = tail.match(`([^№]${w})(.+)?`);
-            ctx.font = font;
-            ctx.fillStyle = color;
-            ctx.fillText(print, x, y);
-            x += ctx.measureText(print).width;
+            canvasCtx.font = font;
+            canvasCtx.fillStyle = color;
+            canvasCtx.fillText(print, x, y);
+            canvasTextureApplyFn(canvasCtx)
+            x += canvasCtx.measureText(print).width;
+
         }
         if(tail=="№") { 
             tail = text.shift(); 
