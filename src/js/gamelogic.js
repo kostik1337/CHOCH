@@ -178,6 +178,7 @@ function onKeyEvent(event, pressed) {
 
                 "№",
             ], (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas))
+                .then(() => new Promise(resolve => setTimeout(resolve, 1000)))
                 .then(() => gameState.state = STATE_GAME);
         }
     } else if (gameState.state == STATE_GAME) {
