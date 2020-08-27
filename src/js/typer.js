@@ -1,4 +1,4 @@
-async function print_2d(text, cancelFn, canvasTextureApplyFn) {
+async function print_2d(c, text, cancelFn, canvasTextureApplyFn) {
     const lineHeight = 21;
     let print,
         ms=0,
@@ -8,7 +8,6 @@ async function print_2d(text, cancelFn, canvasTextureApplyFn) {
         font,
         color = "#0f0",
         n = {valueOf(){y += lineHeight; x = 45; }}
-        cctx = document.querySelector("#canvas2d").getContext("2d");
         
     while (tail != "№") {
         if (cancelFn()) return
@@ -20,12 +19,12 @@ async function print_2d(text, cancelFn, canvasTextureApplyFn) {
         catch (_) {
             await new Promise(resolve => setTimeout(resolve, ms)); // sleep. DON'T delete ';'!!!
             [_,print,tail] = tail.match(`([^№]${w})(.+)?`);
-            cctx.font = font;
-            cctx.shadowColor = (cctx.fillStyle = color) + 'b'; // #rgb -> #rgba
-            cctx.shadowBlur = 12;
-            cctx.fillText(print, x, y);
-            canvasTextureApplyFn(cctx)
-            x += cctx.measureText(print).width;
+            c.font = font;
+            c.shadowColor = (c.fillStyle = color) + 'b'; // #rgb -> #rgba
+            c.shadowBlur = 12;
+            c.fillText(print, x, y);
+            canvasTextureApplyFn(c)
+            x += c.measureText(print).width;
         }
         if(tail=="№") tail = text.shift();
     }

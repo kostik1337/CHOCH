@@ -174,7 +174,9 @@ function onKeyEvent(event, pressed) {
             let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
             let wait = (t) => [`ms=${t}`, " №"]
 
-            print_2d([
+            let cctx = document.querySelector("#canvas2d").getContext("2d")
+            let w = cctx.canvas.width, h = cctx.canvas.height
+            print_2d(cctx, [
                 ...wait(1000),
 
                 `n+n;ms=50;font=${cliFont};color='#0f0'`, "totosz@vlt1337> №",
@@ -209,16 +211,16 @@ function onKeyEvent(event, pressed) {
                 ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
                 "asjkgfsdfJFSDJKG!?!№", "+n",
                 ...wait(800),
-                ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,500,999,999)",
+                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,500,${w},${h})`,
                 ";ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!№",
                 ...wait(800),
-                ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,500,999,999)",
+                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,500,${w},${h})`,
 
                 `;x=x_;y=y_;ms=50;color='#bbb';w='';font=${cliFont}`, "hack https:⁄⁄asodih90xvy809.com/ --find-missing-page№",
                 ";ms=800", " №", ";ms=50", "--please№",
 
                 ...wait(400),
-                ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,0,9999,999);y=40",
+                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,0,${w},${h});y=40`,
                 "n+n;ms=500;w='+',color='#fff'", "Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
                 "+n;color='#fff'", "Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
                 "+n;color='#fff'", "Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
