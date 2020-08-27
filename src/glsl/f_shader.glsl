@@ -2,6 +2,10 @@ uniform float t;
 uniform vec2 res;
 uniform vec2 pos;
 uniform vec2 cam;
+// death factor
+uniform float df;
+// checkpoint factor
+uniform float cf;
 
 const float playerSize = 0.03;
 const vec2 cameraZoom = vec2(3., 2.5);
@@ -169,6 +173,6 @@ void main() {
           ) / LAYERS;
         }
 
-        gl_FragColor = vec4(sqrt(c), 1.0);
+        gl_FragColor = vec4(sqrt(c)+vec3(df,cf,0.), 1.0);
     }
 }

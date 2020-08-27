@@ -15,8 +15,11 @@ let player = {
     reqSpeed: new Vec2(0, 0),
     speed: new Vec2(0, 0),
     movementStates: [0, 0, 0, 0],
-    lastCheckpointId: 0,
+    lastCheckpointId: -1,
     lastCheckpointPos: new Vec2(0.5, 0.1),
+    isDead: false,
+    deathFactor: 0.,
+    checkpointFactor: 0.,
 
     solidNormal: null
 };
@@ -38,6 +41,8 @@ function init(gl, buf) {
         uRes: uniformLoc("res"),
         uPos: uniformLoc("pos"),
         uCam: uniformLoc("cam"),
+        uDeathFactor: uniformLoc("df"),
+        uCheckpointFactor: uniformLoc("cf"),
     };
 
     ctx.testTex = createCanvasPostprocTexture(gl)
@@ -54,7 +59,7 @@ function init(gl, buf) {
     gl.vertexAttribPointer(attrPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(attrPosition);
 
-    playerInitPos()
+    playerResurrect()
 
     player.cam.set(player.pos.x, player.pos.y)
     // @ifdef DEBUG
@@ -65,24 +70,34 @@ function init(gl, buf) {
     // @endif
 }
 
-function playerInitPos() {
+function playerResurrect() {
+    player.isDead = false
+    player.deathFactor = 0
     player.speed.set(0, 0)
     player.pos.set(player.lastCheckpointPos.x, player.lastCheckpointPos.y)
 }
 
 function update() {
     if (gameState.state != STATE_GAME) return;
-    player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.3);
-    player.pos.addEq(player.speed.x, player.speed.y);
-    if (player.solidNormal != null) {
-        let dot = player.solidNormal.dot(player.speed);
-        if (dot < 0) {
-            let offset = player.solidNormal.mul(-dot * 1.);
-            player.pos.addEq(offset.x, offset.y);
+
+    if (player.isDead) {
+        player.speed.set(0, 0)
+    } else {
+        player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.3);
+        player.pos.addEq(player.speed.x, player.speed.y);
+        if (player.solidNormal != null) {
+            let dot = player.solidNormal.dot(player.speed);
+            if (dot < 0) {
+                let offset = player.solidNormal.mul(-dot * 1.);
+                player.pos.addEq(offset.x, offset.y);
+            }
         }
     }
     let speedOffset = 0;
     player.cam.mixEq(player.pos.x + player.speed.x * speedOffset, player.pos.y + player.speed.y * speedOffset, 0.1);
+
+    player.deathFactor *= 0.92;
+    player.checkpointFactor *= 0.95;
 }
 
 function render(gl) {
@@ -99,6 +114,8 @@ function render(gl) {
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform2f(programInfo.uPos, player.pos.x, player.pos.y);
         gl.uniform2f(programInfo.uCam, player.cam.x, player.cam.y);
+        gl.uniform1f(programInfo.uDeathFactor, player.deathFactor);
+        gl.uniform1f(programInfo.uCheckpointFactor, player.checkpointFactor);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -116,12 +133,17 @@ function render(gl) {
 
         let isCheckpoint = pixelValues[8] > 1
         // death check
-        if (pixelValues[4] > 1 && !isCheckpoint) {
-            playerInitPos();
+        if (pixelValues[4] > 1 && !isCheckpoint && !player.isDead) {
+            player.isDead = true
+            player.deathFactor = 1
+            setTimeout(() => {
+                playerResurrect();
+            }, 500)
         }
 
         let checkpointId = Math.round(pixelValues[9]);
         if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
+            if (checkpointId > player.lastCheckpointId) player.checkpointFactor = 1;
             player.lastCheckpointPos.set(player.pos.x, player.pos.y);
             player.lastCheckpointId = checkpointId;
         }
@@ -147,7 +169,7 @@ function setTextureCanvasData(gl, tex, canvas) {
 function onKeyEvent(event, pressed) {
     if (gameState.state == STATE_MENU) {
         // enter
-        if (event.which == 13) {
+        if (event.which == 13 && pressed) {
             gameState.state = STATE_START_CUTSCENE
             let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
             let wait = (t) => [`ms=${t}`, " №"]
@@ -155,40 +177,40 @@ function onKeyEvent(event, pressed) {
             print_2d([
                 ...wait(1000),
 
-                `n+n;ms=50;font=${cliFont};color='#0f0'`,"totosz@vlt1337> №", 
+                `n+n;ms=50;font=${cliFont};color='#0f0'`, "totosz@vlt1337> №",
                 ...wait(500),
                 ";ms=50;color='#bbb';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
 
-                "+n;ms=300",". . .  №",
+                "+n;ms=300", ". . .  №",
 
                 "n+n;color='#888';ms=50;w='+'",
                 "HTTP/2 404№", "+n",
-                "content-type: text/html; charset=UTF-8№","+n",
-                "referrer-policy: no-referrer№","+n",
-                "content-length: 1565№","+n",
-                `date: ${new Date().toDateString()}№`,"+n",
-                'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443";', "+n", 
-                'ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443";', '+n', 
-                'ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№',"n+n",
+                "content-type: text/html; charset=UTF-8№", "+n",
+                "referrer-policy: no-referrer№", "+n",
+                "content-length: 1565№", "+n",
+                `date: ${new Date().toDateString()}№`, "+n",
+                'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443";', "+n",
+                'ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443";', '+n',
+                'ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№', "n+n",
 
-                "<!DOCTYPE html>№","+n",
-                "<html lang=en>№","+n",
-                "<meta charset=utf-8>№","+n",
-                "<title>Error 404 (Not Found)!!1</title>№","+n",
+                "<!DOCTYPE html>№", "+n",
+                "<html lang=en>№", "+n",
+                "<meta charset=utf-8>№", "+n",
+                "<title>Error 404 (Not Found)!!1</title>№", "+n",
                 "<p>The requested URL was not found on this server. Tough luck :-)№",
 
                 "n+n,ms=500;color='#c00'", "[ERROR] Hacking failed with code 0x04729632",
 
-                "+n;color='#0f0'","totosz@vlt1337> №",
+                "+n;color='#0f0'", "totosz@vlt1337> №",
 
                 "x_=x;y_=y", // save caret location
 
                 ...wait(1200),
                 ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
-                "asjkgfsdfJFSDJKG!?!№","+n",
+                "asjkgfsdfJFSDJKG!?!№", "+n",
                 ...wait(800),
                 ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,500,999,999)",
-                ";ms=60;y=600;x=200","You can hide it from me but I'll find it anyway!№",
+                ";ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!№",
                 ...wait(800),
                 ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,500,999,999)",
 
@@ -197,20 +219,23 @@ function onKeyEvent(event, pressed) {
 
                 ...wait(400),
                 ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,0,9999,999);y=40",
-                "n+n;ms=500;w='+',color='#fff'","Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
-                "+n;color='#fff'","Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
-                "+n;color='#fff'","Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
-                "+n;color='#fff'","Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
-                "n+n;color='#fff';x=200","Manual guidance required. Press any key to start№",
+                "n+n;ms=500;w='+',color='#fff'", "Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
+                "+n;color='#fff'", "Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
+                "+n;color='#fff'", "Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
+                "+n;color='#fff'", "Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
+                "n+n;color='#fff';x=200", "Manual guidance required. Press any key to start№",
                 "w='';ms=200", ". . .  №",
 
                 ...wait(2000),
-                
+
                 "№" // terminate
-            ], (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas))
+            ], () => gameState.state != STATE_START_CUTSCENE,
+                (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas))
                 .then(() => new Promise(resolve => setTimeout(resolve, 1000)))
                 .then(() => gameState.state = STATE_GAME);
         }
+    } else if (gameState.state == STATE_START_CUTSCENE) {
+        if (event.which == 13 && pressed) gameState.state = STATE_GAME
     } else if (gameState.state == STATE_GAME) {
         // arrow keys: left, right, up, down
         let index = [38, 40, 37, 39].indexOf(event.which);

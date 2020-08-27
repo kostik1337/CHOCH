@@ -12,14 +12,5 @@ precision mediump float;
 
 const canvasPostprocFsSource = `
 precision mediump float;
-
-uniform vec2 res;
-uniform sampler2D tex;
-
-void main() {
-    vec2 uv = gl_FragCoord.xy / res;
-    uv.y = 1. - uv.y;
-    vec4 tex = texture2D(tex, uv);
-    gl_FragColor = vec4(tex.rgb * tex.a, 1.);
-}
+// @include ../glsl/canvas_postproc_f_shader.glsl
 `

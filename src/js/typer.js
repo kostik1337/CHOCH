@@ -1,4 +1,4 @@
-async function print_2d(text, canvasTextureApplyFn) {
+async function print_2d(text, cancelFn, canvasTextureApplyFn) {
     const lineHeight = 21;
     let print,
         ms=0,
@@ -11,6 +11,7 @@ async function print_2d(text, canvasTextureApplyFn) {
         cctx = document.querySelector("#canvas2d").getContext("2d");
         
     while (tail != "№") {
+        if (cancelFn()) return
         try {
             // this can accidentally swallow the end of the text so each line must end with "№" that throws an exception
             eval(tail);
