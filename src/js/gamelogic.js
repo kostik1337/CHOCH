@@ -86,7 +86,7 @@ function update() {
 }
 
 function render(gl) {
-    if (gameState.state == STATE_MENU) {
+    if (gameState.state == STATE_MENU || gameState.state == STATE_START_CUTSCENE) {
         const programInfo = ctx.canvasPostprocProgramInfo;
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
@@ -142,8 +142,37 @@ function render(gl) {
 function onKeyEvent(event, pressed) {
     if (gameState.state == STATE_MENU) {
         // enter
-        if (event.which == 13) {
-            gameState.state = STATE_GAME
+        if (event.which == 13) { 
+            gameState.state = STATE_START_CUTSCENE
+
+            print_2d([
+                "totosz@vlt1337>№", ";color='#888';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
+                
+                ";color='#888';ms=50;w='+'",
+                "HTTP/2 404№",
+                "content-type: text/html; charset=UTF-8№",
+                "referrer-policy: no-referrer№",
+                "content-length: 1565№",
+                `date: ${new Date().toDateString()}№`,
+                'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443"; ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№',
+                " №",
+
+                "<!DOCTYPE html>№",
+                "<html lang=en>№",
+                "<meta charset=utf-8>№",
+                "<title>Error 404 (Not Found)!!1</title>№",
+                "<p>The requested URL was not found on this server. Tough luck :-)№",
+
+                ";y=500;x=100;ms=100;w='';color='#f00';font='16px italic \"Arial\",sans-serif'",
+                "#$&*^#@*&$^!?!№",
+                "You can hide it from me but I'll find it anyway!№",
+
+                // TODO write this in the console, not speech
+                ";color='#0f0';w='+'", "totosz@vlt1337>№", ";color='#888';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/ --find-missing-page№",
+                "--please№",
+
+                "№",
+            ]).then(()=> gameState.state = STATE_GAME);
         }
     } else if (gameState.state == STATE_GAME) {
         // arrow keys: left, right, top, down

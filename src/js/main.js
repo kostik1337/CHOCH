@@ -4,8 +4,8 @@ var textCtx = document.querySelector('#canvas2d').getContext("2d");
 
 function createTextureFromCanvas(gl, text) {
     let textCanvas = textCtx.canvas;
-    textCanvas.width = 128;
-    textCanvas.height = 128;
+    // textCanvas.width = 128;
+    // textCanvas.height = 128;
     const render = initFont(font, textCtx);
     render(text.toUpperCase(), 10, textCanvas.height/2, 5);
 
