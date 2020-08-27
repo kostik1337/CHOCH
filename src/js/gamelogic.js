@@ -149,34 +149,64 @@ function onKeyEvent(event, pressed) {
         // enter
         if (event.which == 13) {
             gameState.state = STATE_START_CUTSCENE
+            let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
+            let wait = (t) => [`ms=${t}`, " №"]
 
             print_2d([
-                "totosz@vlt1337>№", ";color='#888';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
+                ...wait(1000),
 
-                ";color='#888';ms=50;w='+'",
-                "HTTP/2 404№",
-                "content-type: text/html; charset=UTF-8№",
-                "referrer-policy: no-referrer№",
-                "content-length: 1565№",
-                `date: ${new Date().toDateString()}№`,
-                'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443"; ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443"; ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№',
-                " №",
+                `n+n;ms=50;font=${cliFont};color='#0f0'`,"totosz@vlt1337> №", 
+                ...wait(500),
+                ";ms=50;color='#bbb';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
 
-                "<!DOCTYPE html>№",
-                "<html lang=en>№",
-                "<meta charset=utf-8>№",
-                "<title>Error 404 (Not Found)!!1</title>№",
+                "+n;ms=300",". . .  №",
+
+                "n+n;color='#888';ms=50;w='+'",
+                "HTTP/2 404№", "+n",
+                "content-type: text/html; charset=UTF-8№","+n",
+                "referrer-policy: no-referrer№","+n",
+                "content-length: 1565№","+n",
+                `date: ${new Date().toDateString()}№`,"+n",
+                'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443";', "+n", 
+                'ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443";', '+n', 
+                'ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№',"n+n",
+
+                "<!DOCTYPE html>№","+n",
+                "<html lang=en>№","+n",
+                "<meta charset=utf-8>№","+n",
+                "<title>Error 404 (Not Found)!!1</title>№","+n",
                 "<p>The requested URL was not found on this server. Tough luck :-)№",
 
-                ";y=500;x=100;ms=100;w='';color='#f00';font='16px italic \"Arial\",sans-serif'",
-                "#$&*^#@*&$^!?!№",
-                "You can hide it from me but I'll find it anyway!№",
+                "n+n,ms=500;color='#c00'", "[ERROR] Hacking failed with code 0x04729632",
 
-                // TODO write this in the console, not speech
-                ";color='#0f0';w='+'", "totosz@vlt1337>№", ";color='#888';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/ --find-missing-page№",
-                "--please№",
+                "+n;color='#0f0'","totosz@vlt1337> №",
 
-                "№",
+                "x_=x;y_=y", // save caret location
+
+                ...wait(1200),
+                ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
+                "asjkgfsdfJFSDJKG!?!№","+n",
+                ...wait(800),
+                ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,500,999,999)",
+                ";ms=60;y=600;x=200","You can hide it from me but I'll find it anyway!№",
+                ...wait(800),
+                ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,500,999,999)",
+
+                `;x=x_;y=y_;ms=50;color='#bbb';w='';font=${cliFont}`, "hack https:⁄⁄asodih90xvy809.com/ --find-missing-page№",
+                ";ms=800", " №", ";ms=50", "--please№",
+
+                ...wait(400),
+                ";cctx.fillStyle='#000';cctx.shadowBlur=0;cctx.fillRect(0,0,9999,999);y=40",
+                "n+n;ms=500;w='+',color='#fff'","Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
+                "+n;color='#fff'","Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
+                "+n;color='#fff'","Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
+                "+n;color='#fff'","Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
+                "n+n;color='#fff';x=200","Manual guidance required. Press any key to start№",
+                "w='';ms=200", ". . .  №",
+
+                ...wait(2000),
+                
+                "№" // terminate
             ], (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas))
                 .then(() => new Promise(resolve => setTimeout(resolve, 1000)))
                 .then(() => gameState.state = STATE_GAME);

@@ -1,13 +1,14 @@
 async function print_2d(text, canvasTextureApplyFn) {
-    const lineHeight = 20;
+    const lineHeight = 21;
     let print,
-        ms=200,
+        ms=0,
         w="+", // regex quantifier for how many characters to process, e.g '{,3}', '+'. Empty string is the same as '{1}'
         tail = text.shift(),
-        [x, y] = [40, 40],
-        font = "24px bold 'Andale Mono', 'Courier New', monospace",
+        [x, y] = [0, 40],
+        font,
         color = "#0f0",
-        canvasCtx = document.querySelector("#canvas2d").getContext("2d");
+        n = {valueOf(){y += lineHeight; x = 45; }}
+        cctx = document.querySelector("#canvas2d").getContext("2d");
         
     while (tail != "№") {
         try {
@@ -18,17 +19,13 @@ async function print_2d(text, canvasTextureApplyFn) {
         catch (_) {
             await new Promise(resolve => setTimeout(resolve, ms)); // sleep. DON'T delete ';'!!!
             [_,print,tail] = tail.match(`([^№]${w})(.+)?`);
-            canvasCtx.font = font;
-            canvasCtx.fillStyle = color;
-            canvasCtx.fillText(print, x, y);
-            canvasTextureApplyFn(canvasCtx)
-            x += canvasCtx.measureText(print).width;
-
+            cctx.font = font;
+            cctx.shadowColor = (cctx.fillStyle = color) + 'b'; // #rgb -> #rgba
+            cctx.shadowBlur = 12;
+            cctx.fillText(print, x, y);
+            canvasTextureApplyFn(cctx)
+            x += cctx.measureText(print).width;
         }
-        if(tail=="№") { 
-            tail = text.shift(); 
-            x = 0; 
-            y += lineHeight; 
-        }
+        if(tail=="№") tail = text.shift();
     }
 }
