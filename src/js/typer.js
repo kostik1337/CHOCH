@@ -1,13 +1,13 @@
 async function print_2d(c, text, cancelFn, canvasTextureApplyFn) {
-    const lineHeight = 21;
+    const lineHeight = 22;
     let print,
         ms=0,
         w="+", // regex quantifier for how many characters to process, e.g '{,3}', '+'. Empty string is the same as '{1}'
         tail = text.shift(),
-        [x, y] = [0, 40],
+        [x, y] = [0, 0],
         font,
         color = "#0f0",
-        n = {valueOf(){y += lineHeight; x = 45; }}
+        n = {valueOf(){y += lineHeight; x = 10; }}
         
     while (tail != "№") {
         if (cancelFn()) return

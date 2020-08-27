@@ -52,6 +52,7 @@ function init(gl, buf) {
         program: shaderProgram,
         uRes: uniformLoc("res"),
         uTex: uniformLoc("tex"),
+        uTime: uniformLoc("t"),
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -106,6 +107,7 @@ function render(gl) {
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
+        gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     } else if (gameState.state == STATE_GAME) {
         const programInfo = ctx.programInfo;
@@ -177,9 +179,9 @@ function onKeyEvent(event, pressed) {
             let cctx = document.querySelector("#canvas2d").getContext("2d")
             let w = cctx.canvas.width, h = cctx.canvas.height
             print_2d(cctx, [
-                ...wait(1000),
+                // ...wait(1000),
 
-                `n+n;ms=50;font=${cliFont};color='#0f0'`, "totosz@vlt1337> №",
+                `+n;ms=50;font=${cliFont};color='#0f0'`, "[totosz@vlt1337 ~]$ ",
                 ...wait(500),
                 ";ms=50;color='#bbb';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
 
@@ -203,18 +205,18 @@ function onKeyEvent(event, pressed) {
 
                 "n+n,ms=500;color='#c00'", "[ERROR] Hacking failed with code 0x04729632",
 
-                "+n;color='#0f0'", "totosz@vlt1337> №",
+                "+n;color='#0f0'", "[totosz@vlt1337 ~]$ ",
 
                 "x_=x;y_=y", // save caret location
 
                 ...wait(1200),
                 ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
-                "asjkgfsdfJFSDJKG!?!№", "+n",
+                "Damn it... They moved it again.№", "+n",
                 ...wait(800),
-                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,500,${w},${h})`,
+                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
                 ";ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!№",
                 ...wait(800),
-                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,500,${w},${h})`,
+                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
 
                 `;x=x_;y=y_;ms=50;color='#bbb';w='';font=${cliFont}`, "hack https:⁄⁄asodih90xvy809.com/ --find-missing-page№",
                 ";ms=800", " №", ";ms=50", "--please№",
@@ -225,16 +227,15 @@ function onKeyEvent(event, pressed) {
                 "+n;color='#fff'", "Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
                 "+n;color='#fff'", "Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
                 "+n;color='#fff'", "Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
-                "n+n;color='#fff';x=200", "Manual guidance required. Press any key to start№",
+                "n+n;color='#fff';x=200", "Manual guidance required. Press enter to start№",
                 "w='';ms=200", ". . .  №",
 
                 ...wait(2000),
 
                 "№" // terminate
-            ], () => gameState.state != STATE_START_CUTSCENE,
-                (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas))
-                .then(() => new Promise(resolve => setTimeout(resolve, 1000)))
-                .then(() => gameState.state = STATE_GAME);
+            ],
+                () => gameState.state != STATE_START_CUTSCENE,
+                (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas));
         }
     } else if (gameState.state == STATE_START_CUTSCENE) {
         if (event.which == 13 && pressed) gameState.state = STATE_GAME
