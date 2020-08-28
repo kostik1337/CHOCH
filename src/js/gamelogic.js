@@ -1,28 +1,11 @@
 const STATE_MENU = 0
 const STATE_START_CUTSCENE = 1
 const STATE_GAME = 2
-const STATE_DEATH = 3
-const STATE_WIN = 4
+const STATE_END = 3
 
-let gameState = {
-    state: STATE_MENU
-};
+let gameState = -1;
 
-let player = {
-    pos: new Vec2(0, 0),
-    cam: new Vec2(0, 0),
-    maxVelocity: 0.005,
-    reqSpeed: new Vec2(0, 0),
-    speed: new Vec2(0, 0),
-    movementStates: [0, 0, 0, 0],
-    lastCheckpointId: -1,
-    lastCheckpointPos: new Vec2(0.5, 0.1),
-    isDead: false,
-    deathFactor: 0.,
-    checkpointFactor: 0.,
-
-    solidNormal: null
-};
+let player = {}
 
 // @ifdef DEBUG
 let debugInfo = {
@@ -60,15 +43,54 @@ function init(gl, buf) {
     gl.vertexAttribPointer(attrPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(attrPosition);
 
-    playerResurrect()
+    setState(STATE_MENU)
 
-    player.cam.set(player.pos.x, player.pos.y)
     // @ifdef DEBUG
     var fpsText = document.createElement("div")
     fpsText.classList.add('debug')
     debugInfo.fpsText = fpsText
     document.querySelector("#debug_div").appendChild(fpsText);
     // @endif
+}
+
+function setState(state) {
+    gameState = state
+    if (state == STATE_MENU) {
+        updateMenuCanvas()
+    } else if (state == STATE_START_CUTSCENE) {
+        startCutsceneStart()
+    } else if (state == STATE_GAME) {
+        player = {
+            pos: new Vec2(0, 0),
+            cam: new Vec2(0, 0),
+            maxVelocity: 0.005,
+            reqSpeed: new Vec2(0, 0),
+            speed: new Vec2(0, 0),
+            movementStates: [0, 0, 0, 0],
+            lastCheckpointId: -1,
+            lastCheckpointPos: new Vec2(0.5, 0.1),
+            isDead: false,
+            deathFactor: 0.,
+            checkpointFactor: 0.,
+
+            solidNormal: null
+        }
+        playerResurrect()
+        player.cam.set(player.pos.x, player.pos.y)
+    } else if (state == STATE_END) {
+        let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
+        let wait = (t) => [`ms=${t}`, " №"]
+
+        let w = cctx.canvas.width, h = cctx.canvas.height
+        cctx.clearRect(0, 0, w, h)
+        setTextureCanvasData()
+        print_2d(cctx, [
+            `+n;ms=100;font=${cliFont};color='#0f0';w=''`, "Congratulations! You won!№",
+            "№"
+        ],
+            () => gameState != STATE_END,
+            () => setTextureCanvasData());
+    }
 }
 
 function playerResurrect() {
@@ -79,7 +101,7 @@ function playerResurrect() {
 }
 
 function update() {
-    if (gameState.state != STATE_GAME) return;
+    if (gameState != STATE_GAME) return;
 
     if (player.isDead) {
         player.speed.set(0, 0)
@@ -102,14 +124,14 @@ function update() {
 }
 
 function render(gl) {
-    if (gameState.state == STATE_MENU || gameState.state == STATE_START_CUTSCENE) {
+    if (gameState == STATE_MENU || gameState == STATE_START_CUTSCENE || gameState == STATE_END) {
         const programInfo = ctx.canvasPostprocProgramInfo;
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
         gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    } else if (gameState.state == STATE_GAME) {
+    } else if (gameState == STATE_GAME) {
         const programInfo = ctx.programInfo;
         gl.useProgram(programInfo.program);
         gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
@@ -143,8 +165,14 @@ function render(gl) {
             }, 500)
         }
 
+        // checkpoint check
         let checkpointId = Math.round(pixelValues[9]);
         if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
+            if (checkpointId == 255) {
+                // TODO: game end
+                setState(STATE_END)
+                return
+            }
             if (checkpointId > player.lastCheckpointId) player.checkpointFactor = 1;
             player.lastCheckpointPos.set(player.pos.x, player.pos.y);
             player.lastCheckpointId = checkpointId;
@@ -163,83 +191,104 @@ function render(gl) {
     }
 }
 
-function setTextureCanvasData(gl, tex, canvas) {
+let cctx = document.querySelector("#canvas2d").getContext("2d")
+
+function setTextureCanvasData() {
+    let gl = ctx.gl
+    let tex = ctx.testTex
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cctx.canvas);
+}
+
+function updateMenuCanvas() {
+    // TODO: move these vars to some global place and reuse them
+    let w = cctx.canvas.width, h = cctx.canvas.height
+    let cliFont = "bold 22px 'Andale Mono', 'Courier New', monospace";
+
+    cctx.clearRect(0, 0, w, h)
+    cctx.font = cliFont;
+    cctx.shadowColor = (cctx.fillStyle = "#bbb") + 'b';
+    cctx.shadowBlur = 12;
+    cctx.fillText("play", 20, h / 2 - 12);
+    setTextureCanvasData()
+}
+
+function startCutsceneStart() {
+    let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
+    let wait = (t) => [`ms=${t}`, " №"]
+
+    let w = cctx.canvas.width, h = cctx.canvas.height
+    cctx.clearRect(0, 0, w, h)
+    setTextureCanvasData()
+    print_2d(cctx, [
+        // ...wait(1000),
+
+        `+n;ms=50;font=${cliFont};color='#0f0'`, "[totosz@vlt1337 ~]$ ",
+        ...wait(500),
+        ";ms=50;color='#bbb';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
+
+        "+n;ms=300", ". . .  №",
+
+        "n+n;color='#888';ms=50;w='+'",
+        "HTTP/2 404№", "+n",
+        "content-type: text/html; charset=UTF-8№", "+n",
+        "referrer-policy: no-referrer№", "+n",
+        "content-length: 1565№", "+n",
+        `date: ${new Date().toDateString()}№`, "+n",
+        'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443";', "+n",
+        'ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443";', '+n',
+        'ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№', "n+n",
+
+        "<!DOCTYPE html>№", "+n",
+        "<html lang=en>№", "+n",
+        "<meta charset=utf-8>№", "+n",
+        "<title>Error 404 (Not Found)!!1</title>№", "+n",
+        "<p>The requested URL was not found on this server. Tough luck :-)№",
+
+        "n+n,ms=500;color='#c00'", "[ERROR] Hacking failed with code 0x04729632",
+
+        "+n;color='#0f0'", "[totosz@vlt1337 ~]$ ",
+
+        "x_=x;y_=y", // save caret location
+
+        ...wait(1200),
+        ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
+        "Damn it... They moved it again.№", "+n",
+        ...wait(800),
+        `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
+        ";ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!№",
+        ...wait(800),
+        `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
+
+        `;x=x_;y=y_;ms=50;color='#bbb';w='';font=${cliFont}`, "hack https:⁄⁄asodih90xvy809.com/ --find-missing-page№",
+        ";ms=800", " №", ";ms=50", "--please№",
+
+        ...wait(400),
+        `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,0,${w},${h});y=40`,
+        "n+n;ms=500;w='+',color='#fff'", "Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
+        "+n;color='#fff'", "Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
+        "+n;color='#fff'", "Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
+        "+n;color='#fff'", "Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
+        "n+n;color='#fff';x=200", "Manual guidance required. Press enter to start№",
+        "w='';ms=200", ". . .  №",
+
+        ...wait(2000),
+
+        "№" // terminate
+    ],
+        () => gameState != STATE_START_CUTSCENE,
+        () => setTextureCanvasData());
 }
 
 function onKeyEvent(event, pressed) {
-    if (gameState.state == STATE_MENU) {
-        // enter
-        if (event.which == 13 && pressed) {
-            gameState.state = STATE_START_CUTSCENE
-            let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
-            let wait = (t) => [`ms=${t}`, " №"]
-
-            let cctx = document.querySelector("#canvas2d").getContext("2d")
-            let w = cctx.canvas.width, h = cctx.canvas.height
-            print_2d(cctx, [
-                // ...wait(1000),
-
-                `+n;ms=50;font=${cliFont};color='#0f0'`, "[totosz@vlt1337 ~]$ ",
-                ...wait(500),
-                ";ms=50;color='#bbb';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
-
-                "+n;ms=300", ". . .  №",
-
-                "n+n;color='#888';ms=50;w='+'",
-                "HTTP/2 404№", "+n",
-                "content-type: text/html; charset=UTF-8№", "+n",
-                "referrer-policy: no-referrer№", "+n",
-                "content-length: 1565№", "+n",
-                `date: ${new Date().toDateString()}№`, "+n",
-                'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443";', "+n",
-                'ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443";', '+n',
-                'ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№', "n+n",
-
-                "<!DOCTYPE html>№", "+n",
-                "<html lang=en>№", "+n",
-                "<meta charset=utf-8>№", "+n",
-                "<title>Error 404 (Not Found)!!1</title>№", "+n",
-                "<p>The requested URL was not found on this server. Tough luck :-)№",
-
-                "n+n,ms=500;color='#c00'", "[ERROR] Hacking failed with code 0x04729632",
-
-                "+n;color='#0f0'", "[totosz@vlt1337 ~]$ ",
-
-                "x_=x;y_=y", // save caret location
-
-                ...wait(1200),
-                ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
-                "Damn it... They moved it again.№", "+n",
-                ...wait(800),
-                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-                ";ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!№",
-                ...wait(800),
-                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-
-                `;x=x_;y=y_;ms=50;color='#bbb';w='';font=${cliFont}`, "hack https:⁄⁄asodih90xvy809.com/ --find-missing-page№",
-                ";ms=800", " №", ";ms=50", "--please№",
-
-                ...wait(400),
-                `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,0,${w},${h});y=40`,
-                "n+n;ms=500;w='+',color='#fff'", "Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
-                "+n;color='#fff'", "Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
-                "+n;color='#fff'", "Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
-                "+n;color='#fff'", "Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
-                "n+n;color='#fff';x=200", "Manual guidance required. Press enter to start№",
-                "w='';ms=200", ". . .  №",
-
-                ...wait(2000),
-
-                "№" // terminate
-            ],
-                () => gameState.state != STATE_START_CUTSCENE,
-                (canvasCtx) => setTextureCanvasData(ctx.gl, ctx.testTex, canvasCtx.canvas));
-        }
-    } else if (gameState.state == STATE_START_CUTSCENE) {
-        if (event.which == 13 && pressed) gameState.state = STATE_GAME
-    } else if (gameState.state == STATE_GAME) {
+    let enterPressed = event.which == 13 && pressed
+    if (gameState == STATE_MENU) {
+        if (enterPressed) setState(STATE_START_CUTSCENE)
+    } else if (gameState == STATE_START_CUTSCENE) {
+        if (enterPressed) setState(STATE_GAME)
+    } else if (gameState == STATE_END) {
+        if (enterPressed) setState(STATE_MENU)
+    } else if (gameState == STATE_GAME) {
         // arrow keys: left, right, up, down
         let index = [38, 40, 37, 39].indexOf(event.which);
         let ms = player.movementStates;

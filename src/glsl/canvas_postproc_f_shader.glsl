@@ -8,12 +8,12 @@ vec3 drawTexWithBounds(vec2 uv) {
     if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.) return BLANK;
 
     vec2 auv = abs(2.*uv-1.);
-    vec2 boundsSize = vec2(1.-0.01, 0.005);
+    vec2 bs = vec2(0.01, 0.002); // bounds size
     float borderLine = max(
-        smoothstep(boundsSize.x-boundsSize.y, boundsSize.x, auv.x),
-        smoothstep(boundsSize.x-boundsSize.y, boundsSize.x, auv.y) 
-    ) * smoothstep(boundsSize.x+boundsSize.y, boundsSize.x, auv.x) 
-      * smoothstep(boundsSize.x+boundsSize.y, boundsSize.x, auv.y);
+        smoothstep(1.-bs.x-2.*bs.y, 1.-bs.x-bs.y, auv.x),
+        smoothstep(1.-bs.x-2.*bs.y, 1.-bs.x-bs.y, auv.y) 
+    ) * smoothstep(1., 1.-bs.y, auv.x) 
+      * smoothstep(1., 1.-bs.y, auv.y);
 
     vec4 texel = texture2D(tex, 0.96*uv-0.02);
     float scanlines = 1. - 0.1*(sin((uv.y+t/20.) *300.)+1.);

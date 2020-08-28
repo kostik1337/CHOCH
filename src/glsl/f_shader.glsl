@@ -59,8 +59,8 @@ MapValue room1(vec2 p) {
   pdead *= mr(t+PI/8.);
   deadly = min(deadly, sdCross(pdead, vec2(0.05, 0.45)));
 
-  float checkpoint = sdBox(p-vec2(0.,-0.35), vec2(csize.x, 0.1));
-  return MapValue(0., 0., deadly, checkpoint, 1);
+  float checkpoint = sdBox(p-vec2(0.,1.), vec2(csize.x, 0.1));
+  return MapValue(0., 0., deadly, checkpoint, 255);
 }
 
 float roomBox(vec2 p) {

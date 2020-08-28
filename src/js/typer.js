@@ -1,4 +1,4 @@
-async function print_2d(c, text, cancelFn, canvasTextureApplyFn) {
+async function print_2d(c, text, cancelFn, textUpdatedCb) {
     const lineHeight = 22;
     let print,
         ms=0,
@@ -18,12 +18,13 @@ async function print_2d(c, text, cancelFn, canvasTextureApplyFn) {
         }
         catch (_) {
             await new Promise(resolve => setTimeout(resolve, ms)); // sleep. DON'T delete ';'!!!
+            if (cancelFn()) return
             [_,print,tail] = tail.match(`([^№]${w})(.+)?`);
             c.font = font;
             c.shadowColor = (c.fillStyle = color) + 'b'; // #rgb -> #rgba
             c.shadowBlur = 12;
             c.fillText(print, x, y);
-            canvasTextureApplyFn(c)
+            textUpdatedCb()
             x += c.measureText(print).width;
         }
         if(tail=="№") tail = text.shift();
