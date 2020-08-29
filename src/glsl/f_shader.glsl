@@ -1,6 +1,7 @@
 uniform float t;
 uniform vec2 res;
 uniform vec2 pos;
+uniform vec2 speed;
 uniform vec2 cam;
 // death factor
 uniform float df;
@@ -115,7 +116,7 @@ vec2 normal(vec2 p) {
     ));
 }
 
-vec3 renderLayer(vec2 uv) {
+vec3 renderLayer(vec2 uv, float i) {
   MapValue m = map(uv);
   vec3 c = vec3(0.);
   if(m.solid > 0.) {
@@ -133,8 +134,44 @@ vec3 renderLayer(vec2 uv) {
   // }
   c += pow(0.002 / abs(m.solid), 4.);
   //if (m.solid < 0.) c += m.solidDisplay;
-  // c += pow(0.004 / abs((playerSize-length(uv - pos))), 4.);
-  c = mix(c, vec3(1.,1.,1.), step(length(uv - pos), playerSize));
+  if (i == 0.) 
+    c = mix(c, vec3(0.,0.,1.), step(length(uv - pos), playerSize));
+  return c;
+}
+
+float sdSegment( in vec2 p, in vec2 a, in vec2 b ) {
+    vec2 pa = p-a, ba = b-a;
+    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
+    return length( pa - ba*h );
+}
+
+float yOffset(float r) {
+  float a = 0.15;
+  r = clamp(0.0, 1.0, r);
+  return a*(-r*r + r);
+}
+
+float renderSpider(vec2 uv) {
+  float radius = playerSize;
+  float c = 0.;
+
+  uv -= pos;
+  uv.y -= yOffset(length(uv/radius)) * radius * 5.;
+  
+  float spiderAngle = atan(speed.y, speed.x) + PI/2.;
+  float spiderBodyLen = radius/10.;
+  vec2 bodyDir = vec2(-sin(spiderAngle), cos(spiderAngle));
+  c += pow(radius/10. / sdSegment(uv, -spiderBodyLen*bodyDir, spiderBodyLen*bodyDir), 8.);
+
+  for(float i=0.; i<8.; ++i) {
+    float ang = mix(-PI/4., PI/4., mod(i, 4.)/3.) + step(4., i) * PI + spiderAngle;
+    ang += sin(20.*t + (mod(i,2.)==0. ? PI: 0.)) * PI/32. * length(speed);
+    //if(i > 3) ang = -ang;
+    vec2 dir = vec2(cos(ang), sin(ang));
+    float rMin = radius/10.;
+    float segmentDist = sdSegment(uv, rMin * dir, radius * dir);
+    c += pow(radius/100. / segmentDist, 2.);
+  }
   return c;
 }
 
@@ -160,18 +197,19 @@ void main() {
 
         vec3 c = vec3(0.);
         for (float i = 0.; i<LAYERS; ++i) {
-          vec2 uv1 = uv * (1.0+i/LAYERS*0.1) + vec2(0., i/LAYERS*0.1) +
-            vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.001;
+          vec2 uv1 = uv * (1.0-i/LAYERS*0.1) - vec2(0., i/LAYERS*0.1) +
+            vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.01;
           uv1 = uv1 / cameraZoom + cam; // zoom
 
           // c += renderLayer(uv1) / LAYERS;
           float aberrationSize = 0.001 * cameraZoom.x;
           c += vec3(
-            renderLayer(uv1-vec2(aberrationSize,0.)).r,
-            renderLayer(uv1).g,
-            renderLayer(uv1+vec2(aberrationSize,0.)).b
+            renderLayer(uv1-vec2(aberrationSize,0.), i).r,
+            renderLayer(uv1, i).g,
+            renderLayer(uv1+vec2(aberrationSize,0.), i).b
           ) / LAYERS;
         }
+        c += renderSpider(uv / cameraZoom + cam);
 
         gl_FragColor = vec4(sqrt(c)+vec3(df,cf,0.), 1.0);
     }

@@ -24,6 +24,7 @@ function init(gl, buf) {
         uRes: uniformLoc("res"),
         uPos: uniformLoc("pos"),
         uCam: uniformLoc("cam"),
+        uSpeed: uniformLoc("speed"),
         uDeathFactor: uniformLoc("df"),
         uCheckpointFactor: uniformLoc("cf"),
     };
@@ -137,6 +138,7 @@ function render(gl) {
         gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform2f(programInfo.uPos, player.pos.x, player.pos.y);
+        gl.uniform2f(programInfo.uSpeed, player.speed.x / player.maxVelocity, player.speed.y / player.maxVelocity);
         gl.uniform2f(programInfo.uCam, player.cam.x, player.cam.y);
         gl.uniform1f(programInfo.uDeathFactor, player.deathFactor);
         gl.uniform1f(programInfo.uCheckpointFactor, player.checkpointFactor);
