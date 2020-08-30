@@ -12,6 +12,7 @@ const float playerSize = 0.03;
 const vec2 cameraZoom = vec2(3., 2.5);
 
 #define PI 3.14159265
+#define LAYERS 8.0
 
 float hash(float x) {return fract(sin(x)*31345.23);}
 float hash2(vec2 x) {return hash(dot(x, vec2(43.123, 32.12345)));}
@@ -171,8 +172,8 @@ float renderSpider(vec2 uv) {
     // legs distorted sticks
     vec2 uvSeg = uv;
     float r = length(uv) / bodyRadius;
-    uvSeg += (vec2(linNoise(r*10.-t), linNoise(r*10.+15.-t))-.5) * radius * 0.05;
-    c += pow(radius/200. / sdSegment(uvSeg, uv-uvBody, -legOffset), 1.);
+    uvSeg += (vec2(linNoise(r*10.-10.*t), linNoise(r*10.+15.-15.*t))-.5) * radius * 0.1;
+    c += pow(radius/200. / sdSegment(uvSeg, uv-uvBody, -legOffset), 1.2);
   }
   c = min(1., c);
 
@@ -186,21 +187,14 @@ float renderSpider(vec2 uv) {
   return c;
 }
 
-#define LAYERS 6.0
-
 vec3 renderAll(vec2 uv) {
   vec3 c = vec3(0.);
   for (float i = 0.; i<LAYERS; ++i) {
-    vec2 uv1 = uv * (1.0-i/LAYERS*0.1) - vec2(0., i/LAYERS*0.1) +
-      vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.001;
+    vec2 uv1 = uv * (1.0-i/LAYERS*0.1) - vec2(0., i/LAYERS*0.1);
+      //+ vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.01;
     uv1 = uv1 / cameraZoom + cam; // zoom
 
     c += renderLayer(uv1) / LAYERS;
-    // c += vec3(
-    //   renderLayer(uv1-vec2(aberrationSize,0.)).r,
-    //   renderLayer(uv1).g,
-    //   renderLayer(uv1+vec2(aberrationSize,0.)).b
-    // ) / LAYERS;
     if (i ==0.) {
       // debug collider
       //c = mix(c, vec3(0.,0.,0.1), step(length(uv1 - pos), playerSize));
