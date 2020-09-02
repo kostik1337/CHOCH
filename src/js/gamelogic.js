@@ -11,7 +11,12 @@ let player = {}
 let debugInfo = {
     fps: 0,
     frames: 0,
-    lastTimeCheck: 0
+    lastTimeCheck: 0,
+
+    camZoom: 3,
+    godmode: true,
+    noclip: true,
+    fast: false
 };
 // @endif
 
@@ -44,13 +49,18 @@ function init(gl, buf) {
     gl.vertexAttribPointer(attrPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(attrPosition);
 
+    // @ifdef DEBUG
+    setState(STATE_GAME)
+    // @endif
+    // @ifndef DEBUG
     setState(STATE_MENU)
+    // @endif
 
     // @ifdef DEBUG
-    var fpsText = document.createElement("div")
-    fpsText.classList.add('debug')
-    debugInfo.fpsText = fpsText
-    document.querySelector("#debug_div").appendChild(fpsText);
+    var debugDiv = document.createElement("div")
+    debugDiv.classList.add('debug')
+    debugInfo.debugDiv = debugDiv
+    document.querySelector("#debug_div").appendChild(debugDiv);
     // @endif
 }
 
@@ -105,7 +115,14 @@ function update() {
     if (player.isDead) {
         player.speed.set(0, 0)
     } else {
+        // @ifdef DEBUG
+        let speedMul = debugInfo.fast ? 5: 1
+        player.speed.mixEq(speedMul*player.reqSpeed.x, speedMul*player.reqSpeed.y, 0.3);
+        // @endif
+        // @ifndef DEBUG
         player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.3);
+        // @endif
+
         player.pos.addEq(player.speed.x, player.speed.y);
         if (player.solidNormal != null) {
             let dot = player.solidNormal.dot(player.speed);
@@ -137,7 +154,12 @@ function render(gl) {
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform2f(programInfo.uPos, player.pos.x, player.pos.y);
         gl.uniform2f(programInfo.uSpeed, player.speed.x / player.maxVelocity, player.speed.y / player.maxVelocity);
-        gl.uniform2f(programInfo.uCam, player.cam.x, player.cam.y);
+        // @ifdef DEBUG
+        gl.uniform4f(programInfo.uCam, player.cam.x, player.cam.y, debugInfo.camZoom * 1.3, debugInfo.camZoom);
+        // @endif
+        // @ifndef DEBUG
+        gl.uniform4f(programInfo.uCam, player.cam.x, player.cam.y, 3. * 1.3, 3.);
+        // @endif
         gl.uniform1f(programInfo.uDeathFactor, player.deathFactor);
         gl.uniform1f(programInfo.uCheckpointFactor, player.checkpointFactor);
 
@@ -146,7 +168,11 @@ function render(gl) {
         let pixelValues = new Uint8Array(3 * 4);
         gl.readPixels(0, 0, 3, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
         // solid check
-        if (pixelValues[0] > 1) {
+        if (pixelValues[0] > 1
+            // @ifdef DEBUG
+            && !debugInfo.noclip
+            // @endif
+        ) {
             player.solidNormal = new Vec2(
                 2. * pixelValues[1] / 255. - 1.,
                 2. * pixelValues[2] / 255. - 1.
@@ -157,7 +183,11 @@ function render(gl) {
 
         let isCheckpoint = pixelValues[8] > 1
         // death check
-        if (pixelValues[4] > 1 && !isCheckpoint && !player.isDead) {
+        if (pixelValues[4] > 1 && !isCheckpoint && !player.isDead
+            // @ifdef DEBUG
+            && !debugInfo.godmode
+            // @endif
+        ) {
             player.isDead = true
             player.deathFactor = 1
             setTimeout(() => {
@@ -184,11 +214,22 @@ function render(gl) {
             debugInfo.lastTimeCheck = time;
             debugInfo.fps = debugInfo.frames;
             debugInfo.frames = 0;
+            updateDebugData()
         }
-        debugInfo.fpsText.innerHTML = `FPS: ${debugInfo.fps}`;
         // @endif
     }
 }
+
+// @ifdef DEBUG
+function updateDebugData() {
+    let debugText = `FPS: ${debugInfo.fps}
+camZoom: ${debugInfo.camZoom}
+godmode: ${debugInfo.godmode}
+noclip: ${debugInfo.noclip}`
+    debugInfo.debugDiv.innerHTML = debugText;
+    // console.log(debugText);
+}
+// @endif
 
 let cctx = document.querySelector("#canvas2d").getContext("2d")
 
@@ -291,11 +332,26 @@ function onKeyEvent(event, pressed) {
         let ms = player.movementStates;
 
         ms[index] = pressed;
-        const speed = player.maxVelocity;
+        let speed = player.maxVelocity;
         player.reqSpeed.set(
             ms[2] ? -speed : ms[3] ? speed : 0,
             ms[0] ? speed : ms[1] ? -speed : 0
         )
+
+        // shift to move fast
+        if (event.which == 16) {
+            console.log(pressed)
+            debugInfo.fast = pressed
+        }
+        // @ifdef DEBUG
+        if (pressed) {
+            if (event.key == '1' || event.key == '2') debugInfo.camZoom = (event.key == '2' ? .7 : 3)
+            else if (event.key == 'g') debugInfo.godmode = !debugInfo.godmode
+            else if (event.key == 'n') debugInfo.noclip = !debugInfo.noclip
+            else return
+            updateDebugData()
+        }
+        // @endif
     }
 }
 

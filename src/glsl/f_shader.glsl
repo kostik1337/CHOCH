@@ -2,19 +2,19 @@ uniform float t;
 uniform vec2 res;
 uniform vec2 pos;
 uniform vec2 speed;
-uniform vec2 cam;
+// cam.xy = cam position, cam.zw - cam zoom
+uniform vec4 cam;
 // death factor
 uniform float df;
 // checkpoint factor
 uniform float cf;
 
 const float playerSize = 0.03;
-const vec2 cameraZoom = 3.*vec2(1.3, 1.);
 // room size
 const vec2 csize = vec2(1., 2.5);
 
 #define PI 3.14159265
-#define LAYERS 8.0
+#define LAYERS 1.0
 
 float hash(float x) {return fract(sin(x)*31345.23);}
 float hash2(vec2 x) {return hash(dot(x, vec2(43.123, 32.12345)));}
@@ -97,13 +97,12 @@ vec2 roomSines2(vec2 p) {
 }
 
 float sawtooth(float t) {
-  return (fract(t)-.5)*2.;
+  return 2.*(fract(t)-.5);
 }
 
 float asawtooth(float t) {return abs(sawtooth(t));}
 
 vec2 roomPolar1(vec2 p) {
-  float mult = 10.;
   p = vec2(length(p), atan(p.y, p.x));
   float l = p.x*3.-t/2.;
   float rotDirection = mod(floor(l),2.) == 0. ? -1. : 1.;
@@ -252,7 +251,7 @@ vec3 renderAll(vec2 uv) {
   for (float i = 0.; i<LAYERS; ++i) {
     vec2 uv1 = uv * (1.0-i/LAYERS*0.1) - vec2(0., i/LAYERS*0.1);
       //+ vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.01;
-    uv1 = uv1 / cameraZoom + cam; // zoom
+    uv1 = uv1 / cam.zw + cam.xy; // zoom
 
     c += renderLayer(uv1) / LAYERS;
     if (i ==0.) {
