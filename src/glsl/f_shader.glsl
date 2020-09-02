@@ -12,9 +12,10 @@ uniform float cf;
 const float playerSize = 0.03;
 // room size
 const vec2 csize = vec2(1., 2.5);
+const vec2 axis45 = vec2(1./sqrt(2.)), axis45N = axis45.yx*vec2(1.,-1.);
 
 #define PI 3.14159265
-#define LAYERS 1.0
+#define LAYERS 8.0
 
 float hash(float x) {return fract(sin(x)*31345.23);}
 float hash2(vec2 x) {return hash(dot(x, vec2(43.123, 32.12345)));}
@@ -48,9 +49,20 @@ struct MapValue {
   int checkpointId; // id of checkpoint, if checkpoint in current point
 };
 
+// gles 2 somehow doesn't support 1./0.
 #define INF 1e10
 
-vec2 roomTest(vec2 p) {
+float fPeakFn(float t, float q) {
+  return smoothstep(1.-q,1.,abs(2.*(fract(t)-.5)));
+}
+
+float sawtooth(float t) {
+  return 2.*(fract(t)-.5);
+}
+
+float asawtooth(float t) {return abs(sawtooth(t));}
+
+float roomTest(vec2 p) {
   vec2 pdead = p - vec2(-0.3, -0.4);
   pdead *= mr(t);
   float deadly = sdCross(pdead, vec2(0.05, 0.45));
@@ -63,52 +75,46 @@ vec2 roomTest(vec2 p) {
   pdead *= mr(t+PI/8.);
   deadly = min(deadly, sdCross(pdead, vec2(0.05, 0.45)));
 
-  return vec2(INF, deadly);
+  return deadly;
 }
 
-float fPeakFn(float t, float q) {
-  return smoothstep(1.-q,1.,abs(2.*(fract(t)-.5)));
+float roomLasers(vec2 p) {
+  float scale = .5;
+  vec2 axes[3];
+  axes[0] = vec2(0., 1.);
+  axes[1] = axis45;
+  axes[2] = axis45N;
+  float deadly = INF;
+  for (int i=0;i<3;++i) {
+    float pdot = dot(p, axes[i]) + t/32.;
+    float pfr = abs(mod(pdot, scale) - scale/2.);
+    float fl = floor(pdot*scale);
+    float s = sin(t*2. + pdot*2. + .66*PI*float(i));
+    deadly = min(deadly, pfr + scale/16.* (s+.5));
+  }
+  return deadly;
 }
 
-// vec2 roomLasers(vec2 p) {
-//   float scale = .4;
-//   vec2 axes[] = vec2[](vec2(0., 1.), axis45, axis45N);
-//   float deadly = INF;
-//   for(int i=0;i<3;++i) {
-//     float pdot = dot(p, axes[i]);
-//     float pyfr = mod(pdot + t/32., scale) - scale/2.;
-//     deadly = min(deadly, abs(pyfr)-scale/32. * (fPeakFn(t*.5+3.*pdot+i/3., .5)-.5));
-//   }
-//   return vec2(INF, deadly);
-// }
-
-vec2 roomSines1(vec2 p) {
+float roomSines1(vec2 p) {
   float mult = 10.;
-  //p = vec2(length(p), atan(p.y, p.x));
   float dead = sin(p.x*mult) * sin(p.y*mult) + .7*sin(2.*t + 5.*p.y + 10.*p.x) + .5;
-  return vec2(INF, dead/mult);
+  return dead/mult;
 }
 
-vec2 roomSines2(vec2 p) {
+float roomSines2(vec2 p) {
   float mult = 10.;
-  //p = vec2(length(p), atan(p.y, p.x));
-  float dead = sin(p.x*mult) * sin(p.y*mult) + .7*sin(2.*t + 5.*p.y + sin(10.*p.x + .3*t)) + .8;
-  return vec2(INF, dead/mult);
+  float dead = sin(p.x*mult) * sin(p.y*mult) + .7*sin(2.*t + 5.*p.y + sin(.3*t)) + .4;
+  return dead/mult;
 }
 
-float sawtooth(float t) {
-  return 2.*(fract(t)-.5);
-}
-
-float asawtooth(float t) {return abs(sawtooth(t));}
-
-vec2 roomPolar1(vec2 p) {
+float roomPolar1(vec2 p) {
   p = vec2(length(p), atan(p.y, p.x));
-  float l = p.x*3.-t/2.;
+  float lenMul = 3.;
+  float l = p.x*lenMul-t/2.;
   float rotDirection = mod(floor(l),2.) == 0. ? -1. : 1.;
   float holes = (asawtooth(p.y/PI*3. - t/4. * rotDirection)-.7)*p.x;
-  float deadly = max((asawtooth(l) - .2), holes);
-  return vec2(INF, deadly);
+  float deadly = max((asawtooth(l) - .2)/lenMul, holes);
+  return deadly;
 }
 
 vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
@@ -117,8 +123,6 @@ vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
     all(equal(room, inRoom)) ? 1. : 0.
   );
 }
-
-#define Y_ROOM 1
 
 MapValue map(vec2 p) {
   vec2 op = p;
@@ -133,9 +137,9 @@ MapValue map(vec2 p) {
   // room.x - solids (additional to room bounds), room.y - deadly objects, room.z - deadly factor
   vec3 room = vec3(INF, INF, 1.);
   if (cid.x == 0 && cid.y == 0) {
-    room.xy = roomTest(p1);
+    room.y = roomPolar1(p1);
   } else if (cid.x == 0 && cid.y == 1) {
-    room.xy = roomPolar1(p1);
+    room.y = roomSines2(p1);
   } else {
     isRoom = false;
   }

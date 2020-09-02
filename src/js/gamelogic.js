@@ -13,7 +13,7 @@ let debugInfo = {
     frames: 0,
     lastTimeCheck: 0,
 
-    camZoom: 3,
+    camZoom: .7,
     godmode: true,
     noclip: true,
     fast: false
@@ -222,9 +222,9 @@ function render(gl) {
 
 // @ifdef DEBUG
 function updateDebugData() {
-    let debugText = `FPS: ${debugInfo.fps}
-camZoom: ${debugInfo.camZoom}
-godmode: ${debugInfo.godmode}
+    let debugText = `FPS: ${debugInfo.fps}<br/>
+camZoom: ${debugInfo.camZoom}<br/>
+godmode: ${debugInfo.godmode}<br/>
 noclip: ${debugInfo.noclip}`
     debugInfo.debugDiv.innerHTML = debugText;
     // console.log(debugText);
@@ -340,7 +340,6 @@ function onKeyEvent(event, pressed) {
 
         // shift to move fast
         if (event.which == 16) {
-            console.log(pressed)
             debugInfo.fast = pressed
         }
         // @ifdef DEBUG
