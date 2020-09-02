@@ -88,9 +88,7 @@ function setState(state) {
         print_2d(cctx, [
             `+n;ms=100;font=${cliFont};color='#0f0';w=''`, "Congratulations! You won!№",
             "№"
-        ],
-            () => gameState != STATE_END,
-            () => setTextureCanvasData());
+        ], () => gameState != STATE_END, setTextureCanvasData);
     }
 }
 
@@ -171,7 +169,6 @@ function render(gl) {
         let checkpointId = Math.round(pixelValues[9]);
         if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
             if (checkpointId == 255) {
-                // TODO: game end
                 setState(STATE_END)
                 return
             }
@@ -277,9 +274,7 @@ function startCutsceneStart() {
         ...wait(2000),
 
         "№" // terminate
-    ],
-        () => gameState != STATE_START_CUTSCENE,
-        () => setTextureCanvasData());
+    ], () => gameState != STATE_START_CUTSCENE, setTextureCanvasData);
 }
 
 function onKeyEvent(event, pressed) {
