@@ -24,6 +24,10 @@ float linNoise(float x) {
   return mix(hash(floor(x)), hash(floor(x)+1.), fract(x));
 }
 
+float smoothNoise(float x) {
+  return mix(hash(floor(x)), hash(floor(x)+1.), smoothstep(0.,1.,fract(x)));
+}
+
 // copied from iq's sdf functions
 mat2 mr(float a) {float s=sin(a),c=cos(a);return mat2(c,s,-s,c);}
 
@@ -113,6 +117,44 @@ float roomPolar1(vec2 p) {
   return deadly;
 }
 
+float roomCircleInv(vec2 p) {
+  float d = dot(p, p);
+  p /= d;
+  vec2 size = vec2(1., 2.5);
+  p.y += .5*t;
+  vec2 cell = floor(p/size);
+  p.x += .7*t* mix(-1.,1.,mod(cell.y, 2.));
+  vec2 mp = abs(mod(p, size) - size/2.)-size/2.5;
+  cell = floor(p/size);
+  float iscell = step(.5,mod(cell.x+cell.y, 2.));
+  float deadly = mix(max(mp.x, mp.y), 1000., iscell);
+  return deadly * d;
+}
+
+float roomPotential(vec2 p) {
+  float pot = 0.;
+  const float I = 4.;
+  for(float i=0.;i<I;++i) {
+    vec2 off = vec2(0., mix(-.9,.9,i/(I-1.)));
+    off.y += .22*sin(t + PI/2.*i);
+    off.x += .1*sin(t + PI/3.*i);
+    pot += 1. / length(p-off);
+  }
+  float potInv = 1./(pot);
+  float modSize = .03;
+  float deadly = max(.09-potInv, abs(mod(potInv-t/30., modSize)-modSize/2.)-modSize/2.3);
+  return deadly;
+}
+
+float roomRandomWaves(vec2 p) {
+  float sz = .3;
+  float factor = (sin(t)+1.)/2.;
+  p.y -= t/6.;
+  p.x += factor*smoothNoise(p.y*5.+123. + t) * .5;
+  p.y += factor*smoothNoise(p.x*5. + .4*t) * .4;
+  return abs(mod(p.y, sz) - sz/2.)-sz/20.;
+}
+
 vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
   return mix(checkpoint, 
     mix(checkpoint, new, step(new.x, checkpoint.x)),
@@ -121,7 +163,6 @@ vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
 }
 
 MapValue map(vec2 p) {
-  vec2 op = p;
   float row = floor(p.y/csize.y);
   //p.x += (hash(row)-.5)*1.;
   ivec2 cid = ivec2(floor(p/csize));
@@ -133,13 +174,14 @@ MapValue map(vec2 p) {
   // room.x - solids (additional to room bounds), room.y - deadly objects, room.z - deadly factor
   vec3 room = vec3(INF, INF, 1.);
   if (cid.x == 0 && cid.y == 0) {
-    room.y = roomPolar1(p1);
+    room.y = roomRandomWaves(p1);
   } else if (cid.x == 0 && cid.y == 1) {
     room.y = roomSines2(p1);
   } else {
     isRoom = false;
   }
   
+  room.y = max(room.y, sdBox(p1, csize/2.2));
   MapValue v = MapValue(-INF, room.y, room.z, INF, 0.);
   if(isRoom) {
     float roomBox = sdBox(p1, csize/2.2);
