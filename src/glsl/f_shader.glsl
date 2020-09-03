@@ -46,15 +46,11 @@ struct MapValue {
   float deadly; // deadly and checkpoint work the same way
   float deadlyFactor; // > 0.5 - deadly zone on, < .5 - off
   float checkpoint;
-  int checkpointId; // id of checkpoint, if checkpoint in current point
+  float checkpointId; // id of checkpoint, if checkpoint in current point
 };
 
 // gles 2 somehow doesn't support 1./0.
 #define INF 1e10
-
-float fPeakFn(float t, float q) {
-  return smoothstep(1.-q,1.,abs(2.*(fract(t)-.5)));
-}
 
 float sawtooth(float t) {
   return 2.*(fract(t)-.5);
@@ -144,7 +140,7 @@ MapValue map(vec2 p) {
     isRoom = false;
   }
   
-  MapValue v = MapValue(-INF, room.y, room.z, INF, 0);
+  MapValue v = MapValue(-INF, room.y, room.z, INF, 0.);
   if(isRoom) {
     float roomBox = sdBox(p1, csize/2.2);
     v.solid = min(-roomBox, room.x);
@@ -157,7 +153,7 @@ MapValue map(vec2 p) {
   vec2 checkpoint = vec2(INF, 0.);
   checkpoint = mixCheckpoint(checkpoint,vec2(sdBox(p - vec2(.8, 2.2), vec2(0.1)), 0.), cid, ivec2(0));
   v.checkpoint = checkpoint.x;
-  v.checkpointId = int(checkpoint.y);
+  v.checkpointId = checkpoint.y;
   
   return v;
 }
@@ -280,7 +276,7 @@ void main() {
     // pixel 3 - checkpoint check
     if (gl_FragCoord.x < 3. && gl_FragCoord.y < 1.) {
         MapValue m = map(pos);
-        gl_FragColor = vec4(m.checkpoint < 0. ? vec3(1., float(m.checkpointId)/255., 0.) : vec3(0.), 1.);
+        gl_FragColor = vec4(m.checkpoint < 0. ? vec3(1., m.checkpointId/255., 0.) : vec3(0.), 1.);
     } else {
         vec2 uv = 2. * gl_FragCoord.xy / res - 1.;
         uv.x *= res.x / res.y;
