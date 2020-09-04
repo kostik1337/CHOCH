@@ -15,14 +15,15 @@ const vec2 csize = vec2(1., 2.5);
 const vec2 axis45 = vec2(1./sqrt(2.)), axis45N = axis45.yx*vec2(1.,-1.);
 
 #define PI 3.14159265
-#define LAYERS 8.0
+#define LAYERS 6.0
+#define NOISE_AMP 0.0
 
 float hash(float x) {return fract(sin(x)*31345.23);}
 float hash2(vec2 x) {return hash(dot(x, vec2(43.123, 32.12345)));}
 
-float linNoise(float x) {
-  return mix(hash(floor(x)), hash(floor(x)+1.), fract(x));
-}
+// float linNoise(float x) {
+//   return mix(hash(floor(x)), hash(floor(x)+1.), fract(x));
+// }
 
 float smoothNoise(float x) {
   return mix(hash(floor(x)), hash(floor(x)+1.), smoothstep(0.,1.,fract(x)));
@@ -155,6 +156,40 @@ float roomRandomWaves(vec2 p) {
   return abs(mod(p.y, sz) - sz/2.)-sz/20.;
 }
 
+float roomFractal1(vec2 p) {
+  const float I = 3.;
+  for (float i=0.;i<I;++i) {
+    p.x = abs(p.x);
+    p.x -= .3;
+    p.y -= .1;
+    p = p*mr(2.*PI/I);
+  }
+  
+  float s = 0.4;
+  p.y -= t/10.;
+  p.x -= t/20.;
+  vec2 mp = abs(mod(p, s)-s/2.)-s/3.;
+  return max(mp.x, mp.y);
+}
+
+// seems unpassable, but maybe I could fix it...
+float roomFractal2(vec2 p) {
+  const float I = 6.;
+  for (float i=0.;i<I;++i) {
+    p.x = abs(p.x);
+    p.x -= .3;
+    p.y += .1;
+    p *= mr(2.*PI/I);
+  }
+  p *= mr(PI/3.);
+  
+  float s = 0.4;
+  p.y -= t/10.;
+  p.x -= t/20.;
+  vec2 mp = abs(mod(p, s)-s/2.)-s/3.;
+  return max(mp.x, mp.y);
+}
+
 vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
   return mix(checkpoint, 
     mix(checkpoint, new, step(new.x, checkpoint.x)),
@@ -174,7 +209,7 @@ MapValue map(vec2 p) {
   // room.x - solids (additional to room bounds), room.y - deadly objects, room.z - deadly factor
   vec3 room = vec3(INF, INF, 1.);
   if (cid.x == 0 && cid.y == 0) {
-    room.y = roomRandomWaves(p1);
+    room.y = roomCircleInv(p1);
   } else if (cid.x == 0 && cid.y == 1) {
     room.y = roomSines2(p1);
   } else {
@@ -290,10 +325,12 @@ float renderSpider(vec2 uv) {
 
 vec3 renderAll(vec2 uv) {
   vec3 c = vec3(0.);
+  uv /= cam.zw;
   for (float i = 0.; i<LAYERS; ++i) {
-    vec2 uv1 = uv * (1.0-i/LAYERS*0.1) - vec2(0., i/LAYERS*0.1);
-      //+ vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*0.01;
-    uv1 = uv1 / cam.zw + cam.xy; // zoom
+    float layerOffset = i/LAYERS*0.04;
+    vec2 uv1 = uv * (1.0-layerOffset) - vec2(0., layerOffset)
+      + vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*NOISE_AMP;
+    uv1 = uv1 + cam.xy;
 
     c += renderLayer(uv1) / LAYERS;
     if (i ==0.) {
