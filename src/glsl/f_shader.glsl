@@ -301,13 +301,6 @@ vec2 roomSolidWait(vec2 p) {
   return vec2(-solid, deadly);
 }
 
-vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
-  return mix(checkpoint, 
-    mix(checkpoint, new, step(new.x, checkpoint.x)),
-    all(equal(room, inRoom)) ? 1. : 0.
-  );
-}
-
 MapValue map(vec2 p) {
   float row = floor(p.y/csize.y);
   ivec2 cid = ivec2(floor(p/csize));

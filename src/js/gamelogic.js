@@ -12,6 +12,10 @@ let debugInfo = {
     fps: 0,
     frames: 0,
     lastTimeCheck: 0,
+    
+    ups: 0,
+    updates: 0,
+    lastTimeUpd: 0,
 
     camZoom: .7,
     godmode: true,
@@ -137,6 +141,17 @@ function update() {
 
     player.deathFactor *= 0.92;
     player.checkpointFactor *= 0.95;
+
+    // @ifdef DEBUG
+    debugInfo.updates++;
+    let time = new Date().getTime();
+    if (time - debugInfo.lastTimeUpd > 1000) {
+        debugInfo.lastTimeUpd = time;
+        debugInfo.ups = debugInfo.updates;
+        debugInfo.updates = 0;
+        updateDebugData()
+    }
+    // @endif
 }
 
 function render(gl) {
@@ -223,6 +238,7 @@ function render(gl) {
 // @ifdef DEBUG
 function updateDebugData() {
     let debugText = `FPS: ${debugInfo.fps}<br/>
+updates per sec: ${debugInfo.ups}<br/>
 camZoom: ${debugInfo.camZoom}<br/>
 godmode: ${debugInfo.godmode}<br/>
 noclip: ${debugInfo.noclip}`
