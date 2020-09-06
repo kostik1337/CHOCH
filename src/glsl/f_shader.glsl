@@ -190,6 +190,117 @@ float roomFractal2(vec2 p) {
   return max(mp.x, mp.y);
 }
 
+float roomBoxesTrace(vec2 p) {
+  vec2 size = vec2(.2);
+  vec2 mp = mod(p, size)-size/2.;
+  vec2 cell = floor(p/size);
+  vec2 sst = vec2(0.);
+  vec2 cellDiv = vec2(5., 30.);
+  cell.x += .5;
+  float f = .5 +
+    (.25*sin(1.*cell.y - t) +
+    .75*sin(.8*cell.x + 2.*sin(t))
+    ) *.5;
+  mp *= mr((1.-f)*PI);
+  return sdBox(mp, mix(vec2(-.05),size/2.1, f));
+}
+
+float roomCirclesSizeMod(vec2 p) {
+  p *= mr(PI/4.);
+  float size = .3;
+  vec2 mp = mod(p, size)-size/2.;
+  vec2 cell = floor(p/size);
+  
+  vec2 circleSizes = vec2(size/32., size/2.55);
+  float field1 = sdCircle(mp, mix(circleSizes.x, circleSizes.y, sin(t)*.5+.5));
+  mp = mod(p+size/2., size)-size/2.;
+  float field2 = sdCircle(mp, mix(circleSizes.x, circleSizes.y, sin(t+PI)*.5+.5));
+  return min(field1, field2);
+}
+
+float roomBoxes(vec2 p) {
+  float size = 0.15;
+  vec2 p1 = vec2(abs(p.x), mod(p.y, size) - size/2.);
+  float yFloor = floor(p.y/size);
+  float freq = .5 + yFloor * size * 3.;//mix(1., 3., hash(yFloor));
+  return max(abs(p1.y)-size/3., .2+.2*sin(freq*t + 123.)-p1.x);
+}
+
+float roomBoxes2(vec2 p) {
+  float size = 0.1;
+  vec2 p1 = vec2(p.x, mod(p.y, size) - size/2.);
+  float yFloor = floor(p.y/size);
+  float freq = .5 + yFloor * 1.;//mix(1., 3., hash(yFloor));
+  return sdBox(p1 - vec2(.41*sin(10.*yFloor + t), 0.), vec2(.1, size/2.2));
+}
+
+float roomBoxes3(vec2 p) {
+  float size = .3;
+  vec2 p1 = vec2(p.x, mod(p.y, size) - size/2.);
+  float yFloor = floor(p.y/size);
+  float sizey = size;
+  size = .28 +.1*hash(yFloor + 10.3);
+  float dir = mix(-1.,1.,mod(yFloor, 2.));
+  float speed = dir * (.2+hash(yFloor)*.1);
+  p1.x = mod(p1.x + speed*t, size) - size/2.;
+  return sdBox(p1, vec2(.01, sizey/2.1));
+}
+
+float roomPolarMod(vec2 p) {
+  const float I = 3.;
+  p.x = -p.x;
+  float f = smoothstep(0., 1., fract(t)) *2.*PI/I;
+  p *= mr(f);
+  vec2 pp = vec2(length(p), atan(p.y, p.x));
+  pp.y = mod(pp.y, 2.*PI/I) - PI/I;
+  p = vec2(pp.x*cos(pp.y), pp.x*sin(pp.y)) - vec2(.37, 0.);
+  p *= mr(-I*f);
+  return sdBox(p, vec2(0.06));
+}
+
+float roomPolarMod2(vec2 p) {
+  float deadly = INF;
+  float boxSize = 0.05;
+  for(float i=0.;i<3.;++i) {
+    float boxOff = .2 * (i+1.);
+    vec2 p1 = p;
+    p1 *= mr(t/2. * mix(-1.,1.,mod(i, 2.)));
+    float I = floor(2.*boxOff/boxSize);
+    vec2 pp = vec2(length(p1), atan(p1.y, p1.x));
+    float angFloor = floor(pp.y / (2.*PI/I));
+    pp.y = mod(pp.y, 2.*PI/I) - PI/I;
+    p1 = vec2(pp.x*cos(pp.y), pp.x*sin(pp.y)) - vec2(boxOff, 0.);
+    vec2 sz = vec2(boxSize);
+    sz *= sin(angFloor + t)*.7+.3;
+    deadly = min(deadly, sdBox(p1, sz));
+  }
+  return deadly;
+}
+
+float roomMovingCorridor(vec2 p) {
+  float tmult = 1., ymult = 3.;
+  float noise1 = smoothNoise(p.y*ymult + 123.*floor(tmult*t) - t);
+  float noise2 = smoothNoise(p.y*ymult + 123.*floor(tmult*t+1.) - t);
+  p.x += .3*(mix(noise1, noise2, smoothstep(0., 1., fract(tmult*t)))-.5);
+  return .1 - abs(p.x);
+}
+
+vec2 roomSolidWait(vec2 p) {
+  float ysize = 1.5, corrWidth = .3;
+  vec2 sp = p;
+  sp.y += 0.5 * ysize * step(0.,sp.x);
+  sp.y = mod(sp.y, ysize) - ysize/2.;
+  sp.x = abs(sp.x);
+  float solid = abs(p.x) - corrWidth;
+  solid = min(solid, sdBox(sp - vec2(corrWidth+0.03, 0.), vec2(.1)));
+  
+  vec2 dp = p;
+  dp.y = mod(dp.y+.5, ysize/2.) - ysize / 4.;
+  vec2 deadlyBoxSize = mix(vec2(.1), vec2(.29, .5), smoothstep(0.1, 0.5, sin(t*1.2)));
+  float deadly = sdBox(dp, deadlyBoxSize);
+  return vec2(-solid, deadly);
+}
+
 vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
   return mix(checkpoint, 
     mix(checkpoint, new, step(new.x, checkpoint.x)),
@@ -209,17 +320,17 @@ MapValue map(vec2 p) {
   // room.x - solids (additional to room bounds), room.y - deadly objects, room.z - deadly factor
   vec3 room = vec3(INF, INF, 1.);
   if (cid.x == 0 && cid.y == 0) {
-    room.y = roomCircleInv(p1);
+    room.xy = roomSolidWait(p1);
   } else if (cid.x == 0 && cid.y == 1) {
     room.y = roomSines2(p1);
   } else {
     isRoom = false;
   }
-  
-  room.y = max(room.y, sdBox(p1, csize/2.2));
+
   MapValue v = MapValue(-INF, room.y, room.z, INF, 0.);
   if(isRoom) {
     float roomBox = sdBox(p1, csize/2.2);
+    v.deadly = max(v.deadly, roomBox);
     v.solid = min(-roomBox, room.x);
   }
 
@@ -245,7 +356,7 @@ vec2 normal(vec2 p) {
 }
 
 float drawLaserBounds(float p, float strength) {
-  return pow(0.001 * strength / abs(p), 2.);
+  return pow(0.001 * strength / abs(p), 2.5);
 }
 
 vec3 renderLayer(vec2 uv) {
