@@ -79,7 +79,7 @@ function setState(state) {
             speed: new Vec2(0, 0),
             movementStates: [0, 0, 0, 0],
             lastCheckpointId: -1,
-            lastCheckpointPos: new Vec2(0.5, 0.1),
+            lastCheckpointPos: new Vec2(0.5, -0.9),
             isDead: false,
             deathFactor: 0.,
             checkpointFactor: 0.,

@@ -349,14 +349,15 @@ MapValue map(vec2 p) {
     v.solid = min(-roomBox, room.x);
   }
 
-  // draw infinite corridor for now
-  v.solid = max(v.solid, .1-abs(p.x-.5));
+  vec2 corrY = vec2(-1., 19. * csize.y); // 19 - rooms count, corrY.x - corridor bottom, corrY.y - corridor top
+  corrY = vec2((corrY.x + corrY.y)/2., (corrY.y - corrY.x)/2.);
+  float corridor = max(abs(p.x-.5)-.1, abs(p.y - corrY.x) - corrY.y);
+  v.solid = max(v.solid, -corridor);
   
   // checkpoints
-  vec2 checkpoint = vec2(INF, 0.);
-  checkpoint = mixCheckpoint(checkpoint,vec2(sdBox(p - vec2(.8, 2.2), vec2(0.1)), 0.), cid, ivec2(0));
-  v.checkpoint = checkpoint.x;
-  v.checkpointId = checkpoint.y;
+  float cpy = mod(p.y + csize.y/2., csize.y) - csize.y/2.;
+  v.checkpoint = abs(cpy) - .03;
+  v.checkpointId = floor((p.y + csize.y/2.) / csize.y);
   
   return v;
 }
