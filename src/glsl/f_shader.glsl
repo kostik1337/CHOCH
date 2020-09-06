@@ -12,7 +12,7 @@ uniform float cf;
 const float playerSize = 0.03;
 // room size
 const vec2 csize = vec2(1., 2.5);
-const vec2 axis45 = vec2(1./sqrt(2.)), axis45N = axis45.yx*vec2(1.,-1.);
+const vec2 axis60 = vec2(sqrt(3.)/2., .5), axis60N = vec2(-sqrt(3.)/2., .5);
 
 #define PI 3.14159265
 #define LAYERS 6.0
@@ -72,8 +72,8 @@ float roomLasers(vec2 p) {
   float scale = .5;
   vec2 axes[3];
   axes[0] = vec2(0., 1.);
-  axes[1] = axis45;
-  axes[2] = axis45N;
+  axes[1] = axis60;
+  axes[2] = axis60N;
   float deadly = INF;
   for (int i=0;i<3;++i) {
     float pdot = dot(p, axes[i]) + t/32.;
@@ -265,7 +265,9 @@ float roomMovingCorridor(vec2 p) {
   float noise1 = smoothNoise(p.y*ymult + 123.*floor(tmult*t) - t);
   float noise2 = smoothNoise(p.y*ymult + 123.*floor(tmult*t+1.) - t);
   p.x += .3*(mix(noise1, noise2, smoothstep(0., 1., fract(tmult*t)))-.5);
-  return .1 - abs(p.x);
+  float waveMod = .2;
+  float waves = abs(mod(dot(p+t/30., axis60), waveMod)-waveMod/2.)-waveMod/2.1;
+  return max(.1 - abs(p.x), waves);
 }
 
 vec2 roomSolidWait(vec2 p) {
@@ -299,8 +301,8 @@ MapValue map(vec2 p) {
   vec4 room = vec4(INF, INF, INF, 0.);
   if (cid.x == 0) {
     if (cid.y == 0) room.y = roomFans(p1);
-    else if (cid.y == 1) room.y = roomPolarMod2(p1);
-    else if (cid.y == 2) room.y = roomPotential(p1);
+    else if (cid.y == 1) room.y = roomPotential(p1);
+    else if (cid.y == 2) room.y = roomPolarMod2(p1);
     else if (cid.y == 3) room.y = roomMovingCorridor(p1);
     else if (cid.y == 4) room.y = roomCirclesSizeMod(p1);
     else if (cid.y == 5) room.xy = roomSolidWait(p1);
@@ -312,8 +314,8 @@ MapValue map(vec2 p) {
     else if (cid.y == 11) room.y = roomPolarMod(p1);
     else if (cid.y == 12) room.y = roomBoxes(p1);
     else if (cid.y == 13) room.y = roomSines1(p1);
-    else if (cid.y == 14) room.y = roomLasers(p1);
-    else if (cid.y == 15) room.y = roomRandomWaves(p1);
+    else if (cid.y == 14) room.y = roomRandomWaves(p1);
+    else if (cid.y == 15) room.y = roomLasers(p1);
     else if (cid.y == 16) room.y = roomFractal2(p1);
     else if (cid.y == 17) room.y = roomCircleInv(p1);
     else if (cid.y == 18) room.zw = roomEndCheckpoint(p1);
