@@ -10,20 +10,22 @@
     <!-- @endif -->
 
     <style type="text/css">
+        <!-- @ifdef DEBUG -->
         .debug {
             color: #ff00ff;
             font-size: 14px;
         }
+        #debug_div {
+            position: absolute;
+            z-index: 50;
+        }
+        <!-- @endif -->
         #glcanvas {
             position: absolute;
             z-index: 1;
         }
         #canvas2d {
            display: none;
-        }
-        #debug_div {
-            position: absolute;
-            z-index: 50;
         }
     </style>
 </head>

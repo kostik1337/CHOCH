@@ -21,10 +21,6 @@ const vec2 axis45 = vec2(1./sqrt(2.)), axis45N = axis45.yx*vec2(1.,-1.);
 float hash(float x) {return fract(sin(x)*31345.23);}
 float hash2(vec2 x) {return hash(dot(x, vec2(43.123, 32.12345)));}
 
-// float linNoise(float x) {
-//   return mix(hash(floor(x)), hash(floor(x)+1.), fract(x));
-// }
-
 float smoothNoise(float x) {
   return mix(hash(floor(x)), hash(floor(x)+1.), smoothstep(0.,1.,fract(x)));
 }
@@ -49,7 +45,6 @@ float sdCross(vec2 p, vec2 size) {
 struct MapValue {
   float solid; // solid < 0 - point is solid (distance to closest solid)
   float deadly; // deadly and checkpoint work the same way
-  float deadlyFactor; // > 0.5 - deadly zone on, < .5 - off
   float checkpoint;
   float checkpointId; // id of checkpoint, if checkpoint in current point
 };
@@ -57,13 +52,7 @@ struct MapValue {
 // gles 2 somehow doesn't support 1./0.
 #define INF 1e10
 
-float sawtooth(float t) {
-  return 2.*(fract(t)-.5);
-}
-
-float asawtooth(float t) {return abs(sawtooth(t));}
-
-float roomTest(vec2 p) {
+float roomFans(vec2 p) {
   vec2 pdead = p - vec2(-0.3, -0.4);
   pdead *= mr(t);
   float deadly = sdCross(pdead, vec2(0.05, 0.45));
@@ -104,17 +93,17 @@ float roomSines1(vec2 p) {
 
 float roomSines2(vec2 p) {
   float mult = 10.;
-  float dead = sin(p.x*mult) * sin(p.y*mult) + .7*sin(2.*t + 5.*p.y + sin(.3*t)) + .4;
+  float dead = sin(p.x*mult) * sin(p.y*mult + t/3.) + .7*sin(2.*t + 5.*p.y + sin(.3*t)) + .4;
   return dead/mult;
 }
 
 float roomPolar1(vec2 p) {
   p = vec2(length(p), atan(p.y, p.x));
-  float lenMul = 3.;
-  float l = p.x*lenMul-t/2.;
-  float rotDirection = mod(floor(l),2.) == 0. ? -1. : 1.;
-  float holes = (asawtooth(p.y/PI*3. - t/4. * rotDirection)-.7)*p.x;
-  float deadly = max((asawtooth(l) - .2)/lenMul, holes);
+  float lenMul = .3, holeMul = PI/6.;
+  float l = p.x - t/6.;
+  float rotDirection = mod(floor(l/lenMul),2.) == 0. ? -1. : 1.;
+  float holes = (abs(mod(p.y + t/4. * rotDirection, holeMul) - lenMul/2.) - holeMul/4.)*p.x;
+  float deadly = max((abs(mod(l, lenMul) - lenMul/2.)-lenMul/10.), holes);
   return deadly;
 }
 
@@ -122,7 +111,7 @@ float roomCircleInv(vec2 p) {
   float d = dot(p, p);
   p /= d;
   vec2 size = vec2(1., 2.5);
-  p.y += .5*t;
+  p.y += .45*t;
   vec2 cell = floor(p/size);
   p.x += .7*t* mix(-1.,1.,mod(cell.y, 2.));
   vec2 mp = abs(mod(p, size) - size/2.)-size/2.5;
@@ -206,12 +195,13 @@ float roomBoxesTrace(vec2 p) {
 }
 
 float roomCirclesSizeMod(vec2 p) {
+  float size = .4;
   p *= mr(PI/4.);
-  float size = .3;
+  p.x += size/2.;
   vec2 mp = mod(p, size)-size/2.;
   vec2 cell = floor(p/size);
   
-  vec2 circleSizes = vec2(size/32., size/2.55);
+  vec2 circleSizes = vec2(size/32., size/2.3);
   float field1 = sdCircle(mp, mix(circleSizes.x, circleSizes.y, sin(t)*.5+.5));
   mp = mod(p+size/2., size)-size/2.;
   float field2 = sdCircle(mp, mix(circleSizes.x, circleSizes.y, sin(t+PI)*.5+.5));
@@ -220,35 +210,26 @@ float roomCirclesSizeMod(vec2 p) {
 
 float roomBoxes(vec2 p) {
   float size = 0.15;
-  vec2 p1 = vec2(abs(p.x), mod(p.y, size) - size/2.);
+  vec2 p1 = vec2(0., mod(p.y, size) - size/2.);
   float yFloor = floor(p.y/size);
-  float freq = .5 + yFloor * size * 3.;//mix(1., 3., hash(yFloor));
+  p1.x = abs(p.x+0.1*sin(yFloor + t/4.));
+  float freq = .5 + yFloor * size * 3.;
   return max(abs(p1.y)-size/3., .2+.2*sin(freq*t + 123.)-p1.x);
 }
 
 float roomBoxes2(vec2 p) {
-  float size = 0.1;
+  float size = 0.103;
   vec2 p1 = vec2(p.x, mod(p.y, size) - size/2.);
   float yFloor = floor(p.y/size);
-  float freq = .5 + yFloor * 1.;//mix(1., 3., hash(yFloor));
+  float freq = .5 + yFloor * 1.;
   return sdBox(p1 - vec2(.41*sin(10.*yFloor + t), 0.), vec2(.1, size/2.2));
-}
-
-float roomBoxes3(vec2 p) {
-  float size = .3;
-  vec2 p1 = vec2(p.x, mod(p.y, size) - size/2.);
-  float yFloor = floor(p.y/size);
-  float sizey = size;
-  size = .28 +.1*hash(yFloor + 10.3);
-  float dir = mix(-1.,1.,mod(yFloor, 2.));
-  float speed = dir * (.2+hash(yFloor)*.1);
-  p1.x = mod(p1.x + speed*t, size) - size/2.;
-  return sdBox(p1, vec2(.01, sizey/2.1));
 }
 
 float roomPolarMod(vec2 p) {
   const float I = 3.;
-  p.x = -p.x;
+  p.x *= p.y>0.?1.:-1.;
+  p.y = abs(p.y);
+  p.y -= .6;
   float f = smoothstep(0., 1., fract(t)) *2.*PI/I;
   p *= mr(f);
   vec2 pp = vec2(length(p), atan(p.y, p.x));
@@ -260,18 +241,20 @@ float roomPolarMod(vec2 p) {
 
 float roomPolarMod2(vec2 p) {
   float deadly = INF;
-  float boxSize = 0.05;
+  float boxSize = 0.06;
   for(float i=0.;i<3.;++i) {
     float boxOff = .2 * (i+1.);
     vec2 p1 = p;
-    p1 *= mr(t/2. * mix(-1.,1.,mod(i, 2.)));
-    float I = floor(2.*boxOff/boxSize);
-    vec2 pp = vec2(length(p1), atan(p1.y, p1.x));
-    float angFloor = floor(pp.y / (2.*PI/I));
-    pp.y = mod(pp.y, 2.*PI/I) - PI/I;
+    //p1 *= mr(t/2. * mix(-1.,1.,mod(i, 2.)));
+    float I = floor(2.*boxOff/boxSize)+3.;
+    float angle = 2.*PI/I;
+    vec2 pp = vec2(length(p1), atan(p1.y, p1.x)+angle/2.);
+    float angFloor = floor(pp.y / angle);
+    if (abs(angFloor) >= I/2.) angFloor = abs(angFloor);
+    pp.y = mod(pp.y, angle) - angle/2.;
     p1 = vec2(pp.x*cos(pp.y), pp.x*sin(pp.y)) - vec2(boxOff, 0.);
     vec2 sz = vec2(boxSize);
-    sz *= sin(angFloor + t)*.7+.3;
+    sz *= mix(-.3, .7, smoothstep(-.4, .4, sin(angFloor + t)));
     deadly = min(deadly, sdBox(p1, sz));
   }
   return deadly;
@@ -301,6 +284,10 @@ vec2 roomSolidWait(vec2 p) {
   return vec2(-solid, deadly);
 }
 
+vec2 roomEndCheckpoint(vec2 p) {
+  return vec2(sdBox(p, vec2(.3)), 255.);
+}
+
 MapValue map(vec2 p) {
   float row = floor(p.y/csize.y);
   ivec2 cid = ivec2(floor(p/csize));
@@ -308,49 +295,55 @@ MapValue map(vec2 p) {
   MapValue val;
   
   bool isRoom = true;
-  // room.x - solids (additional to room bounds), room.y - deadly objects, room.z - deadly factor
-  vec3 room = vec3(INF, INF, 1.);
+  // room.x - solids (additional to room bounds), room.y - deadly objects, room.zw - checkpoint (game ender)
+  vec4 room = vec4(INF, INF, INF, 0.);
   if (cid.x == 0) {
-    if (cid.y == 0) room.y = roomTest(p1);
-    else if (cid.y == 1) room.y = roomLasers(p1);
-    else if (cid.y == 2) room.y = roomSines1(p1);
-    else if (cid.y == 3) room.y = roomSines2(p1);
-    else if (cid.y == 4) room.y = roomPolar1(p1);
-    else if (cid.y == 5) room.y = roomCircleInv(p1);
-    else if (cid.y == 6) room.y = roomPotential(p1);
-    else if (cid.y == 7) room.y = roomRandomWaves(p1);
-    else if (cid.y == 8) room.y = roomFractal1(p1);
-    else if (cid.y == 9) room.y = roomFractal2(p1);
-    else if (cid.y == 10) room.y = roomBoxesTrace(p1);
-    else if (cid.y == 11) room.y = roomCirclesSizeMod(p1);
+    if (cid.y == 0) room.y = roomFans(p1);
+    else if (cid.y == 1) room.y = roomPolarMod2(p1);
+    else if (cid.y == 2) room.y = roomPotential(p1);
+    else if (cid.y == 3) room.y = roomMovingCorridor(p1);
+    else if (cid.y == 4) room.y = roomCirclesSizeMod(p1);
+    else if (cid.y == 5) room.xy = roomSolidWait(p1);
+    else if (cid.y == 6) room.y = roomSines2(p1);
+    else if (cid.y == 7) room.y = roomPolar1(p1);
+    else if (cid.y == 8) room.y = roomBoxesTrace(p1);
+    else if (cid.y == 9) room.y = roomBoxes2(p1);
+    else if (cid.y == 10) room.y = roomFractal1(p1);
+    else if (cid.y == 11) room.y = roomPolarMod(p1);
     else if (cid.y == 12) room.y = roomBoxes(p1);
-    else if (cid.y == 13) room.y = roomBoxes2(p1);
-    else if (cid.y == 14) room.y = roomBoxes3(p1);
-    else if (cid.y == 15) room.y = roomPolarMod(p1);
-    else if (cid.y == 16) room.y = roomPolarMod2(p1);
-    else if (cid.y == 17) room.y = roomMovingCorridor(p1);
-    else if (cid.y == 18) room.xy = roomSolidWait(p1);
+    else if (cid.y == 13) room.y = roomSines1(p1);
+    else if (cid.y == 14) room.y = roomLasers(p1);
+    else if (cid.y == 15) room.y = roomRandomWaves(p1);
+    else if (cid.y == 16) room.y = roomFractal2(p1);
+    else if (cid.y == 17) room.y = roomCircleInv(p1);
+    else if (cid.y == 18) room.zw = roomEndCheckpoint(p1);
     else isRoom = false;
   } else {
     isRoom = false;
   }
 
-  MapValue v = MapValue(-INF, room.y, room.z, INF, 0.);
-  if(isRoom) {
-    float roomBox = sdBox(p1, csize/2.2);
-    v.deadly = max(v.deadly, roomBox);
+  MapValue v = MapValue(-INF, room.y, 0., 0.);
+  vec2 roomSize = csize/2.2;
+  float corridorWidth = .1;
+  if (isRoom) {
+    float roomBox = sdBox(p1, roomSize);
+    vec2 pz = vec2(p1.x, abs(p1.y) - roomSize.y);
+    float deadlyZone = max(roomBox, -sdCircle(pz, corridorWidth));
+    v.deadly = max(v.deadly, deadlyZone);
     v.solid = min(-roomBox, room.x);
   }
 
   vec2 corrY = vec2(-1., 19. * csize.y); // 19 - rooms count, corrY.x - corridor bottom, corrY.y - corridor top
   corrY = vec2((corrY.x + corrY.y)/2., (corrY.y - corrY.x)/2.);
-  float corridor = max(abs(p.x-.5)-.1, abs(p.y - corrY.x) - corrY.y);
+  float corridor = max(abs(p.x-.5)-corridorWidth, abs(p.y - corrY.x) - corrY.y);
   v.solid = max(v.solid, -corridor);
   
   // checkpoints
   float cpy = mod(p.y + csize.y/2., csize.y) - csize.y/2.;
-  v.checkpoint = abs(cpy) - .03;
-  v.checkpointId = floor((p.y + csize.y/2.) / csize.y);
+  vec2 checkpointWithId = vec2(abs(cpy) - .03, floor((p.y + csize.y/2.) / csize.y));
+  checkpointWithId = mix(checkpointWithId, room.zw, step(room.z, 0.));
+  v.checkpoint = checkpointWithId.x;
+  v.checkpointId = checkpointWithId.y;
   
   return v;
 }
@@ -378,7 +371,7 @@ vec3 renderLayer(vec2 uv) {
       c += checkpointColor/10.;
     }
     else {
-      vec3 deadlyColor = mix(vec3(.1,.1,.1), vec3(1.,.1,.1), vec3(step(.5, m.deadlyFactor)));
+      vec3 deadlyColor = vec3(1.,.1,.1);
       c += drawLaserBounds(m.deadly, 3.) * deadlyColor;
       if (m.deadly < 0.) c += deadlyColor/10.;
     }
