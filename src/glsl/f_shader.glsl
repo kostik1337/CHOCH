@@ -310,19 +310,34 @@ vec2 mixCheckpoint(vec2 checkpoint, vec2 new, ivec2 room, ivec2 inRoom) {
 
 MapValue map(vec2 p) {
   float row = floor(p.y/csize.y);
-  //p.x += (hash(row)-.5)*1.;
   ivec2 cid = ivec2(floor(p/csize));
   vec2 p1 = mod(p, csize) - csize/2.;
   MapValue val;
-  //col = vec3(cid.x/10., cid.y/2., p1.y/csize.y);
   
   bool isRoom = true;
   // room.x - solids (additional to room bounds), room.y - deadly objects, room.z - deadly factor
   vec3 room = vec3(INF, INF, 1.);
-  if (cid.x == 0 && cid.y == 0) {
-    room.xy = roomSolidWait(p1);
-  } else if (cid.x == 0 && cid.y == 1) {
-    room.y = roomSines2(p1);
+  if (cid.x == 0) {
+    if (cid.y == 0) room.y = roomTest(p1);
+    else if (cid.y == 1) room.y = roomLasers(p1);
+    else if (cid.y == 2) room.y = roomSines1(p1);
+    else if (cid.y == 3) room.y = roomSines2(p1);
+    else if (cid.y == 4) room.y = roomPolar1(p1);
+    else if (cid.y == 5) room.y = roomCircleInv(p1);
+    else if (cid.y == 6) room.y = roomPotential(p1);
+    else if (cid.y == 7) room.y = roomRandomWaves(p1);
+    else if (cid.y == 8) room.y = roomFractal1(p1);
+    else if (cid.y == 9) room.y = roomFractal2(p1);
+    else if (cid.y == 10) room.y = roomBoxesTrace(p1);
+    else if (cid.y == 11) room.y = roomCirclesSizeMod(p1);
+    else if (cid.y == 12) room.y = roomBoxes(p1);
+    else if (cid.y == 13) room.y = roomBoxes2(p1);
+    else if (cid.y == 14) room.y = roomBoxes3(p1);
+    else if (cid.y == 15) room.y = roomPolarMod(p1);
+    else if (cid.y == 16) room.y = roomPolarMod2(p1);
+    else if (cid.y == 17) room.y = roomMovingCorridor(p1);
+    else if (cid.y == 18) room.xy = roomSolidWait(p1);
+    else isRoom = false;
   } else {
     isRoom = false;
   }
