@@ -25,6 +25,8 @@ let debugInfo = {
 // @endif
 
 function init(gl, buf) {
+    ctx.time = 0
+
     // main game shader
     let shaderProgram = initShaderProgram(gl, vsSource, gameFsSource);
     let uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
@@ -46,7 +48,6 @@ function init(gl, buf) {
         program: shaderProgram,
         uRes: uniformLoc("res"),
         uTex: uniformLoc("tex"),
-        uTime: uniformLoc("t"),
     }
 
     // canvas postproc shader (crt)
@@ -174,6 +175,7 @@ function update() {
 }
 
 function render(gl) {
+    ctx.time += 1/60
     if (gameState == STATE_MENU || gameState == STATE_START_CUTSCENE || gameState == STATE_END) {
         const programInfo = ctx.canvasPostprocProgramInfo;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -181,14 +183,14 @@ function render(gl) {
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
-        gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
+        gl.uniform1f(programInfo.uTime, ctx.time);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     } else if (gameState == STATE_GAME) {
         // render all game stuff to texture
         gl.bindFramebuffer(gl.FRAMEBUFFER, ctx.fbTexData[0]);
         let programInfo = ctx.programInfo;
         gl.useProgram(programInfo.program);
-        gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
+        gl.uniform1f(programInfo.uTime, ctx.time);
         gl.uniform2f(programInfo.uRes, ctx.fbTexData[2], ctx.fbTexData[3]);
         gl.uniform2f(programInfo.uPos, player.pos.x, player.pos.y);
         gl.uniform2f(programInfo.uSpeed, player.speed.x / player.maxVelocity, player.speed.y / player.maxVelocity);
@@ -213,7 +215,6 @@ function render(gl) {
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
-        gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // solid check

@@ -1,6 +1,5 @@
 uniform vec2 res;
 uniform sampler2D tex;
-uniform float t;
 
 void main() {
     vec2 uv = gl_FragCoord.xy / res;

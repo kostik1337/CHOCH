@@ -13,7 +13,6 @@ function main() {
 
     ctx.canvasSize = new Vec2(canvas.clientWidth, canvas.clientHeight);
     ctx.gl = gl;
-    ctx.timeStart = Date.now();
 
     const buffer = initScreenQuadBuffer(gl);
     init(gl, buffer)

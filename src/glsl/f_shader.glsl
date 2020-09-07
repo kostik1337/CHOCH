@@ -343,7 +343,7 @@ MapValue map(vec2 p) {
   // checkpoints
   float cpy = mod(p.y + csize.y/2., csize.y) - csize.y/2.;
   vec2 checkpointWithId = vec2(abs(cpy) - .03, floor((p.y + csize.y/2.) / csize.y));
-  checkpointWithId = mix(checkpointWithId, room.zw, step(room.z, 50.));
+  checkpointWithId = mix(checkpointWithId, room.zw, step(room.z, checkpointWithId.x));
   v.checkpoint = checkpointWithId.x;
   v.checkpointId = checkpointWithId.y;
   
