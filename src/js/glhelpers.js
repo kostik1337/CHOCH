@@ -17,7 +17,7 @@ function initScreenQuadBuffer(gl) {
 function initShaderProgram(gl, vsSource, fsSource) {
     function loadShader(gl, type, source) {
         const shader = gl.createShader(type);
-    
+
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
         // @ifdef DEBUG
@@ -27,7 +27,7 @@ function initShaderProgram(gl, vsSource, fsSource) {
             return null;
         }
         // @endif
-    
+
         return shader;
     }
 
@@ -49,12 +49,27 @@ function initShaderProgram(gl, vsSource, fsSource) {
     return shaderProgram;
 }
 
-function createCanvasPostprocTexture(gl) {
+function createPostprocTexture(gl, w, h) {
     let tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
+    if (w > 0 && h > 0) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return tex
+}
+
+function createFramebufferWithTexture(gl, w, h) {
+    let tex = createPostprocTexture(gl, w, h)
+    let fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    return [fb, tex, w, h]
+}
+
+function deleteFramebufferWithTexture(gl) {
+    gl.deleteFramebuffer(gl[0]);
+    gl.deleteTexture(gl[1]);
 }

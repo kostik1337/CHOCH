@@ -343,7 +343,7 @@ MapValue map(vec2 p) {
   // checkpoints
   float cpy = mod(p.y + csize.y/2., csize.y) - csize.y/2.;
   vec2 checkpointWithId = vec2(abs(cpy) - .03, floor((p.y + csize.y/2.) / csize.y));
-  checkpointWithId = mix(checkpointWithId, room.zw, step(room.z, 0.));
+  checkpointWithId = mix(checkpointWithId, room.zw, step(room.z, 50.));
   v.checkpoint = checkpointWithId.x;
   v.checkpointId = checkpointWithId.y;
   
@@ -475,12 +475,7 @@ void main() {
         vec2 uv = 2. * gl_FragCoord.xy / res - 1.;
         uv.x *= res.x / res.y;
 
-        float aberrationSize = 0.01;
-        vec3 c = vec3(
-          renderAll(uv-vec2(aberrationSize,0.)).r,
-          renderAll(uv).g,
-          renderAll(uv+vec2(aberrationSize,0.)).b
-        );
+        vec3 c = renderAll(uv);
 
         gl_FragColor = vec4(sqrt(c)+vec3(df,cf,0.), 1.0);
     }

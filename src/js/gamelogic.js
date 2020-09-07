@@ -25,6 +25,7 @@ let debugInfo = {
 // @endif
 
 function init(gl, buf) {
+    // main game shader
     let shaderProgram = initShaderProgram(gl, vsSource, gameFsSource);
     let uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
     ctx.programInfo = {
@@ -38,7 +39,18 @@ function init(gl, buf) {
         uCheckpointFactor: uniformLoc("cf"),
     };
 
-    ctx.testTex = createCanvasPostprocTexture(gl)
+    // game postproc shader
+    shaderProgram = initShaderProgram(gl, vsSource, postprocFsSource);
+    uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
+    ctx.postprocProgramInfo = {
+        program: shaderProgram,
+        uRes: uniformLoc("res"),
+        uTex: uniformLoc("tex"),
+        uTime: uniformLoc("t"),
+    }
+    
+    // canvas postproc shader (crt)
+    ctx.canvasTex = createPostprocTexture(gl, 0, 0)
     shaderProgram = initShaderProgram(gl, vsSource, canvasPostprocFsSource);
     uniformLoc = s => gl.getUniformLocation(shaderProgram, s);
     ctx.canvasPostprocProgramInfo = {
@@ -54,7 +66,7 @@ function init(gl, buf) {
     gl.enableVertexAttribArray(attrPosition);
 
     // @ifdef DEBUG
-    setState(STATE_GAME)
+    setState(STATE_MENU)
     // @endif
     // @ifndef DEBUG
     setState(STATE_MENU)
@@ -75,6 +87,11 @@ function setState(state) {
     } else if (state == STATE_START_CUTSCENE) {
         startCutsceneStart()
     } else if (state == STATE_GAME) {
+        // create framebuffer here
+        let divide = 1
+        if(ctx.fbTexData) deleteFramebufferWithTexture(ctx.fbTexData)
+        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x/divide, ctx.canvasSize.y/divide)
+
         player = {
             pos: new Vec2(0, 0),
             cam: new Vec2(0, 0),
@@ -159,16 +176,20 @@ function update() {
 function render(gl) {
     if (gameState == STATE_MENU || gameState == STATE_START_CUTSCENE || gameState == STATE_END) {
         const programInfo = ctx.canvasPostprocProgramInfo;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindTexture(gl.TEXTURE_2D, ctx.canvasTex);
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
         gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     } else if (gameState == STATE_GAME) {
-        const programInfo = ctx.programInfo;
+        // render all game stuff to texture
+        gl.bindFramebuffer(gl.FRAMEBUFFER, ctx.fbTexData[0]);
+        let programInfo = ctx.programInfo;
         gl.useProgram(programInfo.program);
         gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
-        gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
+        gl.uniform2f(programInfo.uRes, ctx.fbTexData[2], ctx.fbTexData[3]);
         gl.uniform2f(programInfo.uPos, player.pos.x, player.pos.y);
         gl.uniform2f(programInfo.uSpeed, player.speed.x / player.maxVelocity, player.speed.y / player.maxVelocity);
         // @ifdef DEBUG
@@ -184,6 +205,17 @@ function render(gl) {
 
         let pixelValues = new Uint8Array(3 * 4);
         gl.readPixels(0, 0, 3, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelValues);
+
+        // post-process texture
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        programInfo = ctx.postprocProgramInfo;
+        gl.bindTexture(gl.TEXTURE_2D, ctx.fbTexData[1]);
+        gl.useProgram(programInfo.program);
+        gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
+        gl.uniform1i(programInfo.uTex, 0);
+        gl.uniform1f(programInfo.uTime, (Date.now() - ctx.timeStart) / 1e3);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
         // solid check
         if (pixelValues[0] > 1
             // @ifdef DEBUG
@@ -253,8 +285,7 @@ let cctx = document.querySelector("#canvas2d").getContext("2d")
 
 function setTextureCanvasData() {
     let gl = ctx.gl
-    let tex = ctx.testTex
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.bindTexture(gl.TEXTURE_2D, ctx.canvasTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cctx.canvas);
 }
 

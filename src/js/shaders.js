@@ -10,6 +10,11 @@ precision mediump float;
 // @include ../glsl/f_shader.glsl
 `;
 
+const postprocFsSource = `
+precision mediump float;
+// @include ../glsl/postproc_f_shader.glsl
+`;
+
 const canvasPostprocFsSource = `
 precision mediump float;
 // @include ../glsl/canvas_postproc_f_shader.glsl
