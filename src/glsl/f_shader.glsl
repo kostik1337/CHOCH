@@ -266,7 +266,7 @@ float roomMovingCorridor(vec2 p) {
   float noise2 = smoothNoise(p.y*ymult + 123.*floor(tmult*t+1.) - t);
   p.x += .3*(mix(noise1, noise2, smoothstep(0., 1., fract(tmult*t)))-.5);
   float waveMod = .2;
-  float waves = abs(mod(dot(p+t/30., axis60), waveMod)-waveMod/2.)-waveMod/2.1;
+  float waves = abs(mod(dot(p-t/30., axis60), waveMod)-waveMod/2.)-waveMod/2.1;
   return max(.1 - abs(p.x), waves);
 }
 
