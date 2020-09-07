@@ -36,7 +36,7 @@ function loop() {
 }
 
 var keyFunction = (e, pressed) => {
-    if (!e.repeat) onKeyEvent(e, pressed)
+    if (!e.repeat) onKeyEvent(e.which, pressed)
 };
 window.addEventListener('keydown', e => keyFunction(e, true));
 window.addEventListener('keyup', e => keyFunction(e, false));

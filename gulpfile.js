@@ -39,7 +39,7 @@ gulp.task('preprocess', () => {
 
 gulp.task('concat', () => {
     let files = ["shaders.js", "mathhelpers.js", "glhelpers.js", "audio.js",
-        "gamelogic.js", "main.js", "typer.js"].map((v) => `${buildDir}/js/${v}`)
+        "gamelogic.js", "main.js", "typer.js", "joystick.js"].map((v) => `${buildDir}/js/${v}`)
     return gulp.src(files)
         .pipe(concat('all.js'))
         .pipe(gulp.dest(buildDir + '/js/'));

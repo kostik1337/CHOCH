@@ -114,6 +114,8 @@ function playerResurrect() {
 }
 
 function update() {
+    if (joy) joyInput(joy, onKeyEvent); // can only poll buttons, no events
+
     if (gameState != STATE_GAME) return;
 
     if (player.isDead) {
@@ -334,8 +336,8 @@ function startCutsceneStart() {
     ], () => gameState != STATE_START_CUTSCENE, setTextureCanvasData);
 }
 
-function onKeyEvent(event, pressed) {
-    let enterPressed = event.which == 13 && pressed
+function onKeyEvent(keyCode, pressed) {
+    let enterPressed = keyCode == 13 && pressed
     if (gameState == STATE_MENU) {
         if (enterPressed) setState(STATE_START_CUTSCENE)
     } else if (gameState == STATE_START_CUTSCENE) {
@@ -344,7 +346,7 @@ function onKeyEvent(event, pressed) {
         if (enterPressed) setState(STATE_MENU)
     } else if (gameState == STATE_GAME) {
         // arrow keys: left, right, up, down
-        let index = [38, 40, 37, 39].indexOf(event.which);
+        let index = [38, 40, 37, 39].indexOf(keyCode);
         let ms = player.movementStates;
 
         ms[index] = pressed;
@@ -355,14 +357,15 @@ function onKeyEvent(event, pressed) {
         )
 
         // shift to move fast
-        if (event.which == 16) {
+        if (keyCode == 16) {
             debugInfo.fast = pressed
         }
         // @ifdef DEBUG
         if (pressed) {
-            if (event.key == '1' || event.key == '2') debugInfo.camZoom = (event.key == '2' ? .7 : 3)
-            else if (event.key == 'g') debugInfo.godmode = !debugInfo.godmode
-            else if (event.key == 'n') debugInfo.noclip = !debugInfo.noclip
+            // '1' or '2'
+            if (keyCode == 49 || keyCode == 50) debugInfo.camZoom = (keyCode == 50 ? .7 : 3)
+            else if (keyCode == 71) debugInfo.godmode = !debugInfo.godmode // 'g'
+            else if (keyCode == 78) debugInfo.noclip = !debugInfo.noclip // 'n'
             else return
             updateDebugData()
         }
