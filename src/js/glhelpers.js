@@ -69,7 +69,7 @@ function createFramebufferWithTexture(gl, w, h) {
     return [fb, tex, w, h]
 }
 
-function deleteFramebufferWithTexture(gl) {
-    gl.deleteFramebuffer(gl[0]);
-    gl.deleteTexture(gl[1]);
+function deleteFramebufferWithTexture(gl, fbtex) {
+    gl.deleteFramebuffer(fbtex[0]);
+    gl.deleteTexture(fbtex[1]);
 }

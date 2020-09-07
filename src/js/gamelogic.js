@@ -12,7 +12,7 @@ let debugInfo = {
     fps: 0,
     frames: 0,
     lastTimeCheck: 0,
-    
+
     ups: 0,
     updates: 0,
     lastTimeUpd: 0,
@@ -48,7 +48,7 @@ function init(gl, buf) {
         uTex: uniformLoc("tex"),
         uTime: uniformLoc("t"),
     }
-    
+
     // canvas postproc shader (crt)
     ctx.canvasTex = createPostprocTexture(gl, 0, 0)
     shaderProgram = initShaderProgram(gl, vsSource, canvasPostprocFsSource);
@@ -89,8 +89,8 @@ function setState(state) {
     } else if (state == STATE_GAME) {
         // create framebuffer here
         let divide = 1
-        if(ctx.fbTexData) deleteFramebufferWithTexture(ctx.fbTexData)
-        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x/divide, ctx.canvasSize.y/divide)
+        if (ctx.fbTexData) deleteFramebufferWithTexture(ctx.gl, ctx.fbTexData)
+        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide)
 
         player = {
             pos: new Vec2(0, 0),
@@ -139,8 +139,8 @@ function update() {
         player.speed.set(0, 0)
     } else {
         // @ifdef DEBUG
-        let speedMul = debugInfo.fast ? 5: 1
-        player.speed.mixEq(speedMul*player.reqSpeed.x, speedMul*player.reqSpeed.y, 0.3);
+        let speedMul = debugInfo.fast ? 5 : 1
+        player.speed.mixEq(speedMul * player.reqSpeed.x, speedMul * player.reqSpeed.y, 0.3);
         // @endif
         // @ifndef DEBUG
         player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.3);
