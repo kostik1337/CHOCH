@@ -7,9 +7,8 @@ async function print_2d(c, text, cancelFn, textUpdatedCb) {
         [x, y] = [0, 0],
         font,
         color = "#0f0",
-        n = { valueOf() { y += lineHeight; x = 10; } }
-
-    wait = (t) => new Promise(resolve => setTimeout(resolve, t))
+        n = { valueOf() { y += lineHeight; x = 10; } },
+        wait = (t) => new Promise(resolve => setTimeout(resolve, t))
 
     while (tail) {
         if (cancelFn()) return

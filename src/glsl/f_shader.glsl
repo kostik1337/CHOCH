@@ -399,8 +399,6 @@ float sdPosCircle(vec2 p, float r) {
 float renderSpider(vec2 uv) {
   float radius = playerSize;
   float c = 0.;
-
-  uv -= pos;
   float spiderAngle = atan(speed.y, speed.x);
 
   // draw body
@@ -448,12 +446,10 @@ vec3 renderAll(vec2 uv) {
     uv1 = uv1 + cam.xy;
 
     c += renderLayer(uv1) / LAYERS;
-    if (i ==0.) {
-      // debug collider
-      //c = mix(c, vec3(0.,0.,0.1), step(length(uv1 - pos), playerSize));
-      c += renderSpider(uv1);
-    }
   }
+  // debug collider
+  //c = mix(c, vec3(0.,0.,0.1), step(length(uv+cam.xy-pos), playerSize));
+  c += renderSpider(uv + cam.xy-pos);
   return c;
 }
 
