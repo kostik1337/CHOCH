@@ -24,6 +24,14 @@ let debugInfo = {
 };
 // @endif
 
+let gameSettings = {
+    difficulty: 1,
+    graphics: 2,
+    difficultyVariants: ["easiest", "easy", "normal", "nightmare"],
+    graphicsVariants: ["low", "medium", "high"],
+    currentSelection: 0
+}
+
 function init(gl, buf) {
     ctx.time = 0
 
@@ -86,10 +94,12 @@ function setState(state) {
     if (state == STATE_MENU) {
         updateMenuCanvas()
     } else if (state == STATE_START_CUTSCENE) {
-        startCutsceneStart()
+        showCutscene(startCutsceneData, STATE_START_CUTSCENE)
+    } else if (state == STATE_END) {
+        showCutscene(endCutsceneData, STATE_END)
     } else if (state == STATE_GAME) {
         // create framebuffer here
-        let divide = 1
+        let divide = [4, 2, 1][gameSettings.graphics]
         if (ctx.fbTexData) deleteFramebufferWithTexture(ctx.gl, ctx.fbTexData)
         ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide)
 
@@ -101,7 +111,7 @@ function setState(state) {
             speed: new Vec2(0, 0),
             movementStates: [0, 0, 0, 0],
             lastCheckpointId: -1,
-            lastCheckpointPos: new Vec2(0.5, -0.9),
+            lastCheckpointPos: new Vec2(0.5, 18*2.5/*-0.9*/),
             isDead: false,
             deathFactor: 0.,
             checkpointFactor: 0.,
@@ -110,17 +120,6 @@ function setState(state) {
         }
         playerResurrect()
         player.cam.set(player.pos.x, player.pos.y)
-    } else if (state == STATE_END) {
-        let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
-        let wait = (t) => [`ms=${t}`, " №"]
-
-        let w = cctx.canvas.width, h = cctx.canvas.height
-        cctx.clearRect(0, 0, w, h)
-        setTextureCanvasData()
-        print_2d(cctx, [
-            `+n;ms=100;font=${cliFont};color='#0f0';w=''`, "Congratulations! You won!№",
-            "№"
-        ], () => gameState != STATE_END, setTextureCanvasData);
     }
 }
 
@@ -175,7 +174,8 @@ function update() {
 }
 
 function render(gl) {
-    ctx.time += 1/60
+    let dt = [1 / 80, 1 / 70, 1 / 60, 1 / 50][gameSettings.difficulty]
+    ctx.time += dt
     if (gameState == STATE_MENU || gameState == STATE_START_CUTSCENE || gameState == STATE_END) {
         const programInfo = ctx.canvasPostprocProgramInfo;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -293,85 +293,55 @@ function setTextureCanvasData() {
 function updateMenuCanvas() {
     // TODO: move these vars to some global place and reuse them
     let w = cctx.canvas.width, h = cctx.canvas.height
-    let cliFont = "bold 22px 'Andale Mono', 'Courier New', monospace";
+    let x = 50, lh = 48 // line height
 
     cctx.clearRect(0, 0, w, h)
     cctx.font = cliFont;
-    cctx.shadowColor = (cctx.fillStyle = "#bbb") + 'b';
     cctx.shadowBlur = 12;
-    cctx.fillText("play", 20, h / 2 - 12);
+
+    let drawMenuItem = (text, i) => {
+        cctx.shadowColor = (cctx.fillStyle = i == gameSettings.currentSelection ? "#0a0" : "#bbb") + 'b';
+        cctx.fillText(text, x, h / 2 - lh * 3 / 2 + lh * i);
+    }
+    drawMenuItem("play", 0)
+    drawMenuItem(`difficulty: ${gameSettings.difficultyVariants[gameSettings.difficulty]}`, 1)
+    drawMenuItem(`graphics: ${gameSettings.graphicsVariants[gameSettings.graphics]}`, 2)
+
     setTextureCanvasData()
 }
 
-function startCutsceneStart() {
-    let cliFont = "`bold 22px 'Andale Mono', 'Courier New', monospace`";
-    let wait = (t) => [`ms=${t}`, " №"]
-
+function showCutscene(cutsceneDataFn, forState) {
     let w = cctx.canvas.width, h = cctx.canvas.height
     cctx.clearRect(0, 0, w, h)
     setTextureCanvasData()
-    print_2d(cctx, [
-        // ...wait(1000),
-
-        `+n;ms=50;font=${cliFont};color='#0f0'`, "[totosz@vlt1337 ~]$ ",
-        ...wait(500),
-        ";ms=50;color='#bbb';w=''", "hack https:⁄⁄asodih90xvy809.com/90as8y/№",
-
-        "+n;ms=300", ". . .  №",
-
-        "n+n;color='#888';ms=50;w='+'",
-        "HTTP/2 404№", "+n",
-        "content-type: text/html; charset=UTF-8№", "+n",
-        "referrer-policy: no-referrer№", "+n",
-        "content-length: 1565№", "+n",
-        `date: ${new Date().toDateString()}№`, "+n",
-        'alt-svc: h3-29=":443"; ma=2592000,h3-27=":443"; ma=2592000,h3-T051=":443";', "+n",
-        'ma=2592000,h3-T050=":443"; ma=2592000,h3-Q050=":443"; ma=2592000,h3-Q046=":443";', '+n',
-        'ma=2592000,h3-Q043=":443"; ma=2592000,quic=":443"; ma=2592000; v="46,43"№', "n+n",
-
-        "<!DOCTYPE html>№", "+n",
-        "<html lang=en>№", "+n",
-        "<meta charset=utf-8>№", "+n",
-        "<title>Error 404 (Not Found)!!1</title>№", "+n",
-        "<p>The requested URL was not found on this server. Tough luck :-)№",
-
-        "n+n,ms=500;color='#c00'", "[ERROR] Hacking failed with code 0x04729632",
-
-        "+n;color='#0f0'", "[totosz@vlt1337 ~]$ ",
-
-        "x_=x;y_=y", // save caret location
-
-        ...wait(1200),
-        ";y=600;x=200;ms=60;w='';color='#f80';font=`bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif`",
-        "Damn it... They moved it again.№", "+n",
-        ...wait(800),
-        `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-        ";ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!№",
-        ...wait(800),
-        `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-
-        `;x=x_;y=y_;ms=50;color='#bbb';w='';font=${cliFont}`, "hack https:⁄⁄asodih90xvy809.com/ --find-missing-page№",
-        ";ms=800", " №", ";ms=50", "--please№",
-
-        ...wait(400),
-        `;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,0,${w},${h});y=40`,
-        "n+n;ms=500;w='+',color='#fff'", "Initialize crawler №", ";x=700;color='#0f0'", "[ OK ]",
-        "+n;color='#fff'", "Generate search route №", ";x=700;color='#0f0'", "[ OK ]",
-        "+n;color='#fff'", "Calculate expression matcher №", ";x=700;color='#0f0'", "[ OK ]",
-        "+n;color='#fff'", "Perform automated search №", "ms=1200;x=700;color='#f00'", "[FAIL]",
-        "n+n;color='#fff';x=200", "Manual guidance required. Press enter to start№",
-        "w='';ms=200", ". . .  №",
-
-        ...wait(2000),
-
-        "№" // terminate
-    ], () => gameState != STATE_START_CUTSCENE, setTextureCanvasData);
+    print_2d(cctx, cutsceneDataFn(w, h), () => gameState != forState, setTextureCanvasData);
 }
 
 function onKeyEvent(keyCode, pressed) {
     let enterPressed = keyCode == 13 && pressed
     if (gameState == STATE_MENU) {
-        if (enterPressed) setState(STATE_START_CUTSCENE)
+        let index = [38, 40, 37, 39].indexOf(keyCode);
+        if (pressed) {
+            if (gameSettings.currentSelection == 0 && enterPressed) setState(STATE_START_CUTSCENE)
+            if (index == 0 || index == 1) {
+                let maxSettings = 3
+                gameSettings.currentSelection =
+                    (gameSettings.currentSelection + (index == 1 ? 1 : maxSettings - 1)) % maxSettings
+                updateMenuCanvas()
+            }
+
+            if (index == 2 || index == 3) {
+                if (gameSettings.currentSelection == 1) {
+                    let variantsLen = gameSettings.difficultyVariants.length
+                    gameSettings.difficulty = (gameSettings.difficulty + (index == 3 ? 1 : variantsLen - 1)) % variantsLen
+                    updateMenuCanvas()
+                } else if (gameSettings.currentSelection == 2) {
+                    let variantsLen = gameSettings.graphicsVariants.length
+                    gameSettings.graphics = (gameSettings.graphics + (index == 3 ? 1 : variantsLen - 1)) % variantsLen
+                    updateMenuCanvas()
+                }
+            }
+        }
     } else if (gameState == STATE_START_CUTSCENE) {
         if (enterPressed) setState(STATE_GAME)
     } else if (gameState == STATE_END) {
