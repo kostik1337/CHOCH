@@ -17,7 +17,7 @@ let debugInfo = {
     updates: 0,
     lastTimeUpd: 0,
 
-    camZoom: .7,
+    camZoom: 3.,
     godmode: true,
     noclip: true,
     fast: false
@@ -100,8 +100,7 @@ function setState(state) {
     } else if (state == STATE_GAME) {
         // create framebuffer here
         let divide = [4, 2, 1][gameSettings.graphics]
-        if (ctx.fbTexData) deleteFramebufferWithTexture(ctx.gl, ctx.fbTexData)
-        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide)
+        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide, ctx.fbTexData)
 
         player = {
             pos: new Vec2(0, 0),
@@ -111,7 +110,7 @@ function setState(state) {
             speed: new Vec2(0, 0),
             movementStates: [0, 0, 0, 0],
             lastCheckpointId: -1,
-            lastCheckpointPos: new Vec2(0.5, 18*2.5/*-0.9*/),
+            lastCheckpointPos: new Vec2(0.5, -0.9),
             isDead: false,
             deathFactor: 0.,
             checkpointFactor: 0.,

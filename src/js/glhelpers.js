@@ -61,15 +61,15 @@ function createPostprocTexture(gl, w, h) {
     return tex
 }
 
-function createFramebufferWithTexture(gl, w, h) {
+function createFramebufferWithTexture(gl, w, h, oldFbTex) {
+    if (oldFbTex) {
+        gl.deleteFramebuffer(oldFbTex[0]);
+        gl.deleteTexture(oldFbTex[1]);
+    }
+
     let tex = createPostprocTexture(gl, w, h)
     let fb = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
     return [fb, tex, w, h]
-}
-
-function deleteFramebufferWithTexture(gl, fbtex) {
-    gl.deleteFramebuffer(fbtex[0]);
-    gl.deleteTexture(fbtex[1]);
 }
