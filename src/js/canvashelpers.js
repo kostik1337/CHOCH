@@ -1,4 +1,4 @@
-async function print_2d(c, text, cancelFn, textUpdatedCb) {
+async function print_2d(c, text, cancelFn, textUpdatedCb, typingCb) {
     const lineHeight = 22;
     let print,
         ms = 0,
@@ -7,6 +7,7 @@ async function print_2d(c, text, cancelFn, textUpdatedCb) {
         [x, y] = [0, 0],
         font,
         color = "#0f0",
+        typing = true,
         n = { valueOf() { y += lineHeight; x = 10; } },
         wait = (t) => new Promise(resolve => setTimeout(resolve, t))
 
@@ -19,15 +20,18 @@ async function print_2d(c, text, cancelFn, textUpdatedCb) {
             await wait(tail.substring(1))
             tail = "";
         } else {
-            await wait(ms)
-            if (cancelFn()) return
-            [_, print, tail] = tail.match(`(^.${w})(.+)?`);
-            c.font = font;
-            c.shadowColor = (c.fillStyle = color) + 'b'; // #rgb -> #rgba
-            c.shadowBlur = 12;
-            c.fillText(print, x, y);
-            textUpdatedCb()
-            x += c.measureText(print).width;
+            while (tail) {
+                await wait(ms)
+                if (cancelFn()) return
+                [_, print, tail] = tail.match(`(^.${w})(.+)?`);
+                if (print !== " ") typingCb();
+                c.font = font;
+                c.shadowColor = (c.fillStyle = color) + 'b'; // #rgb -> #rgba
+                c.shadowBlur = 12;
+                c.fillText(print, x, y);
+                textUpdatedCb()
+                x += c.measureText(print).width;
+            }
         }
         if (!tail || tail.length == 0) tail = text.shift();
     }
@@ -78,7 +82,7 @@ let startCutsceneData = (w, h) => [
     "!n+n;ms=500;w='+',color='#fff'", "Initialize crawler ", "!;x=700;color='#0f0'", "[ OK ]",
     "!+n;color='#fff'", "Generate search route ", "!;x=700;color='#0f0'", "[ OK ]",
     "!+n;color='#fff'", "Calculate expression matcher ", "!;x=700;color='#0f0'", "[ OK ]",
-    "!+n;color='#fff'", "Perform automated search ", "_1200", "!;x=700;color='#f00'", "[FAIL]",
+    "!+n;color='#fff'", "Perform automated search ", "_500", "!;x=700;color='#f00'", "[FAIL]",
     "!n+n;color='#fff';x=200", "Manual guidance required. Press enter to start",
     "!w='';ms=200", ". . .  "
 ];

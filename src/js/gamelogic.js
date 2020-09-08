@@ -242,6 +242,7 @@ function render(gl) {
             setTimeout(() => {
                 playerResurrect();
             }, 500)
+            getAudioProcessor().death()
         }
 
         // checkpoint check
@@ -249,9 +250,13 @@ function render(gl) {
         if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
             if (checkpointId == 255) {
                 setState(STATE_END)
+                getAudioProcessor().lastCheckpoint()
                 return
             }
-            if (checkpointId > player.lastCheckpointId) player.checkpointFactor = 1;
+            if (checkpointId > player.lastCheckpointId) {
+                player.checkpointFactor = 1;
+                getAudioProcessor().checkpoint()
+            }
             player.lastCheckpointPos.set(player.pos.x, player.pos.y);
             player.lastCheckpointId = checkpointId;
         }
@@ -313,7 +318,11 @@ function showCutscene(cutsceneDataFn, forState) {
     let w = cctx.canvas.width, h = cctx.canvas.height
     cctx.clearRect(0, 0, w, h)
     setTextureCanvasData()
-    print_2d(cctx, cutsceneDataFn(w, h), () => gameState != forState, setTextureCanvasData);
+    print_2d(cctx, cutsceneDataFn(w, h),
+        () => gameState != forState,
+        setTextureCanvasData,
+        () => { getAudioProcessor().typingFn() }
+    );
 }
 
 function onKeyEvent(keyCode, pressed) {
@@ -327,6 +336,7 @@ function onKeyEvent(keyCode, pressed) {
                 gameSettings.currentSelection =
                     (gameSettings.currentSelection + (index == 1 ? 1 : maxSettings - 1)) % maxSettings
                 updateMenuCanvas()
+                getAudioProcessor().menuChangeFn(false)
             }
 
             if (index == 2 || index == 3) {
@@ -334,10 +344,12 @@ function onKeyEvent(keyCode, pressed) {
                     let variantsLen = gameSettings.difficultyVariants.length
                     gameSettings.difficulty = (gameSettings.difficulty + (index == 3 ? 1 : variantsLen - 1)) % variantsLen
                     updateMenuCanvas()
+                    getAudioProcessor().menuChangeFn(true)
                 } else if (gameSettings.currentSelection == 2) {
                     let variantsLen = gameSettings.graphicsVariants.length
                     gameSettings.graphics = (gameSettings.graphics + (index == 3 ? 1 : variantsLen - 1)) % variantsLen
                     updateMenuCanvas()
+                    getAudioProcessor().menuChangeFn(true)
                 }
             }
         }
