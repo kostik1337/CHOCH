@@ -140,7 +140,7 @@ function setupAudioProcessor() {
 
         let oscs = Array(3).fill().map((fr) => {
             let lfo = context.createOscillator()
-            lfo.frequency.value = 0.1 + 0.1 * Math.random()//0.119
+            lfo.frequency.value = 0.1 + 0.1 * Math.random()
             lfo.type = 'sine';
             lfo.start();
 
@@ -155,7 +155,7 @@ function setupAudioProcessor() {
             oscGainLfo.start();
 
             let osc = context.createOscillator();
-            osc.type = 'triangle';
+            osc.type = 'sine'; // could also try "triangle", but checkpoint becomes too quiet
             osc.start();
 
             oscGainLfo.connect(oscGain.gain)
@@ -174,22 +174,34 @@ function setupAudioProcessor() {
             [0, 5, 9],
             [3, 10, 12],
             [2, 5, 7],
-            // [220, 220 * 4 / 3, 370],
-            // [220, 220 * 4 / 3, 370]
+            [0, 3, 10],
+            [5, 7, 10],
+            [0, 7, 5],
         ];
-        let currentChord = 0;
-        let nextChord = () => {
-            let notes = chords[currentChord]
-            currentChord = (currentChord + 1) % chords.length
+        let currentChord = -1;
+
+        let setChord = (notes) => {
             for (let i = 0; i < oscs.length; ++i)
                 oscs[i].frequency.setValueAtTime(220 * Math.pow(2, notes[i] / 12), t(0))
         }
+        let nextChord = () => {
+            currentChord = (currentChord + 1) % chords.length
+            let notes = chords[currentChord]
+            setChord(notes)
+        }
+
+        setInterval(() => {
+            // random chord inversions
+            let notes = chords[currentChord].map((n) => n + 12 * (Math.floor(Math.random() * 3) - 1))
+            console.log(currentChord)
+            setChord(notes)
+        }, 5000)
 
         nextChord()
         return [
             (on) => {
                 if (on) {
-                    gain.gain.linearRampToValueAtTime(0.3, t(2));
+                    gain.gain.linearRampToValueAtTime(0.2, t(2));
                 } else {
                     gain.gain.setValueAtTime(0, t(0));
                 }
