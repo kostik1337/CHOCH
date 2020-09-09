@@ -92,12 +92,14 @@ function init(gl, buf) {
 function setState(state) {
     gameState = state
     if (state == STATE_MENU) {
+        getAudioProcessor().ambient(false)
         updateMenuCanvas()
     } else if (state == STATE_START_CUTSCENE) {
         showCutscene(startCutsceneData, STATE_START_CUTSCENE)
     } else if (state == STATE_END) {
         showCutscene(endCutsceneData, STATE_END)
     } else if (state == STATE_GAME) {
+        getAudioProcessor().ambient(true)
         // create framebuffer here
         let divide = [4, 2, 1][gameSettings.graphics]
         ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide, ctx.fbTexData)

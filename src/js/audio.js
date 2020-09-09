@@ -8,19 +8,16 @@ playButton.onclick = function () {
 document.querySelector("#debug_div").appendChild(playButton);
 // @endif
 
-let saturate = (threshold) => (x) => Math.max(-threshold, Math.min(threshold, x));
-
-// from https://www.musicdsp.org/en/latest/Effects/203-fold-back-distortion.html
-let fold = (threshold) => (x) => {
-    if (x > threshold || x < -threshold) {
-        x = Math.abs(Math.abs(x - threshold % (threshold * 4)) - threshold * 2) - threshold;
-    }
-    return x;
-}
-
 function setupAudioProcessor() {
     let context = new AudioContext();
     let t = (dt) => context.currentTime + dt
+
+    let reverb = Freeverb(context)
+    reverb.roomSize = 0.7
+    reverb.dampening = 4000
+    reverb.wet.value = .5
+    reverb.dry.value = .0
+    reverb.connect(context.destination);
 
     let attackDecay = (param, attack, decay, maxVal = 1, minVal = 0) => {
         //param.setValueAtTime(1.0, t(0))
@@ -87,18 +84,11 @@ function setupAudioProcessor() {
         let delayGain = context.createGain();
         delayGain.gain.setValueAtTime(0.5, t(0))
 
-        let reverb = Freeverb(context)
-        reverb.roomSize = 0.7
-        reverb.dampening = 4000
-        reverb.wet.value = .5
-        reverb.dry.value = .0
-
         gain.connect(delay)
         delay.connect(delayGain)
         delayGain.connect(delay)
         gain.connect(reverb);
         delayGain.connect(reverb);
-        reverb.connect(context.destination);
 
         let notes = [440, 220, 440]
         let playNote = (index) => {
@@ -138,132 +128,45 @@ function setupAudioProcessor() {
         }
     }
 
-    let setupMusicProcecssor = () => {
-        let setWaveshaperCurve = (shaper, samples, fn) => {
-            let curve = new Float32Array(samples)
-            for (let i = 0; i < samples; ++i) {
-                let normalized = (i / (samples - 1)) * 2 - 1;
-                curve[i] = fn(normalized, i);
-            }
-            shaper.curve = curve
-        }
+    let setupAmbient = () => {
+        let lfo = context.createOscillator()
+        lfo.frequency.value = 0.119
+        lfo.type = 'sine';
+        lfo.start();
 
-        let setupHihat = () => {
-            let bufferSize = context.sampleRate * 1;
-            let buffer = context.createBuffer(1, bufferSize, context.sampleRate);
-            for (let i = 0; i < bufferSize; i++) {
-                buffer.getChannelData(0)[i] = Math.random() * 2 - 1;
-            }
-            let noise = context.createBufferSource();
-            noise.buffer = buffer;
-            noise.loop = true;
-            noise.start();
+        let lfoGain = context.createGain()
+        lfoGain.gain.setValueAtTime(10, t(0))
 
-            let gain = context.createGain();
-            gain.gain.setValueAtTime(0, t(0))
+        let delay = context.createDelay(1.0);
+        delay.delayTime.setValueAtTime(1.0, t(0));
+        let delayGain = context.createGain();
+        delayGain.gain.setValueAtTime(0.9, t(0));
 
-            let filter = context.createBiquadFilter()
-            filter.Q.setValueAtTime(1, t(0))
-            filter.frequency.setValueAtTime(11000, t(0))
-            filter.type = "highpass"
+        let gain = context.createGain();
+        gain.gain.setValueAtTime(0, t(0));
 
-            noise.connect(gain);
-            gain.connect(filter);
-            filter.connect(context.destination);
-
-            return () => {
-                attackDecay(gain.gain, 0.0, 0.08, 0.1)
-            }
-        }
-
-        let setupBassDrum = () => {
+        // minor 7-th
+        [220, 220*4/3, 370].forEach((fr) => {
             let osc = context.createOscillator();
+            osc.frequency.value = fr
             osc.type = 'sine';
             osc.start();
+            osc.connect(gain)
+            lfoGain.connect(osc.detune)
+        })
 
-            let gain = context.createGain()
-            gain.gain.setValueAtTime(0, t(0))
+        lfo.connect(lfoGain)
+        gain.connect(delay)
+        delay.connect(delayGain)
+        delayGain.connect(delay)
+        delay.connect(reverb)
 
-            osc.connect(gain);
-            gain.connect(context.destination);
-
-            return () => {
-                gain.gain.cancelScheduledValues(t(0))
-                attackDecay(gain.gain, 0.01, 0.5)
-                attackDecay(osc.frequency, 0.01, 0.04, 200, 40)
+        return (on) => {
+            if(on) {
+                gain.gain.linearRampToValueAtTime(0.3, t(2));
+            } else {
+                gain.gain.setValueAtTime(0, t(0));    
             }
-        }
-
-        let setupBass = () => {
-            let osc = context.createOscillator();
-            osc.frequency.value = 55
-            osc.type = 'square';
-            osc.start();
-
-            let filter = context.createBiquadFilter()
-            filter.Q.setValueAtTime(1, t(0))
-            filter.frequency.setValueAtTime(100, t(0))
-            filter.type = "lowpass"
-
-            let gain = context.createGain()
-            gain.gain.setValueAtTime(1, t(0))
-
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(context.destination);
-
-            return () => {
-                gain.gain.cancelScheduledValues(t(0))
-                attackDecay(gain.gain, 0.01, 0.5)
-                attackDecay(osc.frequency, 0.01, 0.04, 200, 30)
-            }
-        }
-
-        // let setupLead = () => {
-        //     let osc = context.createOscillator();
-        //     osc.type = 'sine';
-        //     osc.frequency.value = 220;
-        //     osc.start();
-
-        //     let [, , foldGain, folder] = createSaturateFold()
-        //     let gain = context.createGain()
-        //     gain.gain.value = 0
-
-        //     let lfo1 = context.createOscillator()
-        //     lfo1.type = 'sine';
-        //     lfo1.frequency.value = 0.1;
-        //     lfo1.start();
-
-        //     let lfoGain = context.createGain()
-        //     lfoGain.gain.value = 0.25
-
-        //     let constant = context.createConstantSource()
-        //     constant.offset.value = 0.75
-
-        //     lfo1.connect(lfoGain)
-        //     lfoGain.connect(foldGain.gain)
-        //     constant.connect(foldGain.gain)
-
-        //     osc.connect(foldGain);
-        //     foldGain.connect(folder);
-        //     folder.connect(gain);
-        //     gain.connect(context.destination);
-
-        //     return (freq) => {
-        //         osc.frequency.value = freq
-        //         attackDecay(gain.gain, 0.01, 0.1, 2)
-        //     }
-        // }
-
-        let hihat = setupHihat()
-        let bassDrum = setupBassDrum()
-        let bass = setupBass()
-        // let lead = setupLead()
-
-        return {
-            hihat: hihat,
-            bassDrum: bassDrum,
-            bass: bass
         }
     }
 
@@ -272,7 +175,7 @@ function setupAudioProcessor() {
     let menuProc = setupMenuChangeProcessor()
     let checkpointProc = setupCheckpointProcessor()
     let deathProc = setupDeathProcessor()
-    let musicProc = setupMusicProcecssor()
+    let ambientProc = setupAmbient()
 
     return {
         ctx: context,
@@ -286,7 +189,7 @@ function setupAudioProcessor() {
         checkpoint: checkpointProc,
         lastCheckpoint: checkpointProc,
         death: deathProc,
-        music: musicProc
+        ambient: ambientProc
     }
 }
 
@@ -296,39 +199,3 @@ function getAudioProcessor() {
     if (!audioProcessor) audioProcessor = setupAudioProcessor()
     return audioProcessor
 }
-
-// let sequence = [0, 2, 3, 5];
-// let playing = true;
-
-function setupSequencer() {
-    let BPM = 120, sixteenthTime = 60 / 4 / BPM;
-
-    let prevNote = 0
-    let bassDrumPattern = [1, 0, 0, 1, 0, 0, 1, 0]
-    let noteToFreq = (base, n) => base * Math.pow(2, n / 12)
-
-    function scheduleNote() {
-        setTimeout(scheduleNote, 50);
-        if (audioProcessor) {
-            let noteIdx = Math.floor((audioProcessor.ctx.currentTime - audioProcessor.startTime) / sixteenthTime)
-            if (noteIdx > prevNote) {
-                prevNote = noteIdx
-
-                // if (noteIdx % 16 == 0) {
-                //     let bassNote = bassPattern[Math.round(noteIdx / 16) % bassPattern.length]
-                //     audioProcessor.music.bass[1](noteToFreq(88, bassNote))
-                // }
-                //audioProcessor.music.lead(noteToFreq(220, leadPattern[noteIdx % leadPattern.length]))
-                if (bassDrumPattern[noteIdx % bassDrumPattern.length]) {
-                    audioProcessor.music.bassDrum()
-                    audioProcessor.music.bass[0]()
-                }
-                //else audioProcessor.music.hihat()
-            }
-            //playNote(note);
-        }
-    }
-    scheduleNote();
-}
-
-setupSequencer()
