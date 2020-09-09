@@ -169,9 +169,7 @@ function setupAudioProcessor() {
             menuProc(isLeftRight ? 550 : 660)
         },
         checkpoint: checkpointProc,
-        lastCheckpoint: () => {
-
-        },
+        lastCheckpoint: checkpointProc,
         death: deathProc,
     }
 }

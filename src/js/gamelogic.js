@@ -330,7 +330,10 @@ function onKeyEvent(keyCode, pressed) {
     if (gameState == STATE_MENU) {
         let index = [38, 40, 37, 39].indexOf(keyCode);
         if (pressed) {
-            if (gameSettings.currentSelection == 0 && enterPressed) setState(STATE_START_CUTSCENE)
+            if (gameSettings.currentSelection == 0 && enterPressed) {
+                setState(STATE_START_CUTSCENE)
+                getAudioProcessor().menuChangeFn(true)
+            }
             if (index == 0 || index == 1) {
                 let maxSettings = 3
                 gameSettings.currentSelection =
