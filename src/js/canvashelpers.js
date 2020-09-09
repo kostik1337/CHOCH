@@ -1,5 +1,4 @@
-async function print_2d(c, text, cancelFn, textUpdatedCb, typingCb) {
-    const lineHeight = 22;
+async function print_2d(c, text, em, cancelFn, textUpdatedCb, typingCb) {
     let print,
         ms = 0,
         w = "+", // regex quantifier for how many characters to process, e.g '{,3}', '+'. Empty string is the same as '{1}'
@@ -8,7 +7,7 @@ async function print_2d(c, text, cancelFn, textUpdatedCb, typingCb) {
         font,
         color = "#0f0",
         typing = true,
-        n = { valueOf() { y += lineHeight; x = 10; } },
+        n = { valueOf() { y += 1.4 * em; x = 0.7 * em; } },
         wait = (t) => new Promise(resolve => setTimeout(resolve, t))
 
     while (tail) {
@@ -37,8 +36,8 @@ async function print_2d(c, text, cancelFn, textUpdatedCb, typingCb) {
     }
 }
 
-let cliFont = "bold 22px 'Andale Mono', 'Courier New', monospace";
-let dialogFont = "bold italic 32px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif";
+let cliFont = "bold 1.4rem 'Andale Mono', 'Courier New', monospace";
+let dialogFont = "bold italic 2rem 'Lucida Sans Unicode', 'Lucida Grande', sans-serif";
 
 let startCutsceneData = (w, h) => [
     `!+n;ms=50;font="${cliFont}";color='#0f0'`, "[totosz@vlt1337 ~]$ ",
@@ -66,11 +65,11 @@ let startCutsceneData = (w, h) => [
     "!x_=x;y_=y", // save caret location
 
     '_1200',
-    `!;y=600;x=200;ms=60;w='';color='#f80';font="${dialogFont}"`,
+    `!;y=38*em;x=13*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
     "Damn it... They moved it again.", "!+n",
     '_800',
     `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-    "!;ms=60;y=600;x=200", "You can hide it from me but I'll find it anyway!",
+    "!;ms=60;y=38*em;x=13*em", "You can hide it from me but I'll find it anyway!",
     '_800',
     `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
 
@@ -78,12 +77,12 @@ let startCutsceneData = (w, h) => [
     "!;ms=800", " ", "!;ms=50", "--please",
 
     '_400',
-    `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,0,${w},${h});y=40`,
-    "!n+n;ms=500;w='+',color='#fff'", "Initialize crawler ", "!;x=700;color='#0f0'", "[ OK ]",
-    "!+n;color='#fff'", "Generate search route ", "!;x=700;color='#0f0'", "[ OK ]",
-    "!+n;color='#fff'", "Calculate expression matcher ", "!;x=700;color='#0f0'", "[ OK ]",
-    "!+n;color='#fff'", "Perform automated search ", "_500", "!;x=700;color='#f00'", "[FAIL]",
-    "!n+n;color='#fff';x=200", "Manual guidance required. Press enter to start",
+    `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,0,${w},${h});y=2.5*em`,
+    "!n+n;ms=500;w='+',color='#fff'", "Initialize crawler ", "!;x=42*em;color='#0f0'", "[ OK ]",
+    "!+n;color='#fff'", "Generate search route ", "!;x=42*em;color='#0f0'", "[ OK ]",
+    "!+n;color='#fff'", "Calculate expression matcher ", "!;x=42*em;color='#0f0'", "[ OK ]",
+    "!+n;color='#fff'", "Perform automated search ", "_500", "!;x=42*em;color='#f00'", "[FAIL]",
+    "!n+n;color='#fff';x=13*em", "Manual guidance required. Press enter to start",
     "!w='';ms=200", ". . .  "
 ];
 

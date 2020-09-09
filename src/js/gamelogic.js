@@ -299,11 +299,12 @@ function setTextureCanvasData() {
 function updateMenuCanvas() {
     // TODO: move these vars to some global place and reuse them
     let w = cctx.canvas.width, h = cctx.canvas.height
-    let x = 50, lh = 48 // line height
+    let em = 16 * w / 1200;
+    let x = 4.1*em, lh = 4*em // line height
 
     cctx.clearRect(0, 0, w, h)
     cctx.font = cliFont;
-    cctx.shadowBlur = 12;
+    cctx.shadowBlur = .75*em;
 
     let drawMenuItem = (text, i) => {
         cctx.shadowColor = (cctx.fillStyle = i == gameSettings.currentSelection ? "#0a0" : "#bbb") + 'b';
@@ -320,7 +321,7 @@ function showCutscene(cutsceneDataFn, forState) {
     let w = cctx.canvas.width, h = cctx.canvas.height
     cctx.clearRect(0, 0, w, h)
     setTextureCanvasData()
-    print_2d(cctx, cutsceneDataFn(w, h),
+    print_2d(cctx, cutsceneDataFn(w, h), 16 * cctx.canvas.width / 1200,
         () => gameState != forState,
         setTextureCanvasData,
         () => { getAudioProcessor().typingFn() }
