@@ -121,6 +121,7 @@ function setupAudioProcessor() {
         filter.frequency.setValueAtTime(1000, t(0))
         filter.type = "lowpass"
         gain.connect(filter);
+        filter.connect(reverb);
         filter.connect(context.destination);
 
         return () => {
@@ -129,45 +130,72 @@ function setupAudioProcessor() {
     }
 
     let setupAmbient = () => {
-        let lfo = context.createOscillator()
-        lfo.frequency.value = 0.119
-        lfo.type = 'sine';
-        lfo.start();
-
-        let lfoGain = context.createGain()
-        lfoGain.gain.setValueAtTime(10, t(0))
-
         let delay = context.createDelay(1.0);
         delay.delayTime.setValueAtTime(1.0, t(0));
         let delayGain = context.createGain();
-        delayGain.gain.setValueAtTime(0.9, t(0));
+        delayGain.gain.setValueAtTime(0.8, t(0));
 
         let gain = context.createGain();
         gain.gain.setValueAtTime(0, t(0));
 
-        // minor 7-th
-        [220, 220*4/3, 370].forEach((fr) => {
+        let oscs = Array(3).fill().map((fr) => {
+            let lfo = context.createOscillator()
+            lfo.frequency.value = 0.1 + 0.1 * Math.random()//0.119
+            lfo.type = 'sine';
+            lfo.start();
+
+            let lfoGain = context.createGain()
+            lfoGain.gain.setValueAtTime(10, t(0))
+            lfo.connect(lfoGain)
+
+            let oscGain = context.createGain()
+            let oscGainLfo = context.createOscillator()
+            oscGainLfo.frequency.value = 0.05 + 0.05 * Math.random()
+            oscGainLfo.type = 'sine';
+            oscGainLfo.start();
+
             let osc = context.createOscillator();
-            osc.frequency.value = fr
-            osc.type = 'sine';
+            osc.type = 'triangle';
             osc.start();
-            osc.connect(gain)
+
+            oscGainLfo.connect(oscGain.gain)
             lfoGain.connect(osc.detune)
+            osc.connect(oscGain)
+            oscGain.connect(gain)
+            return osc
         })
 
-        lfo.connect(lfoGain)
         gain.connect(delay)
         delay.connect(delayGain)
         delayGain.connect(delay)
         delay.connect(reverb)
 
-        return (on) => {
-            if(on) {
-                gain.gain.linearRampToValueAtTime(0.3, t(2));
-            } else {
-                gain.gain.setValueAtTime(0, t(0));    
-            }
+        let chords = [
+            [0, 5, 9],
+            [3, 10, 12],
+            [2, 5, 7],
+            // [220, 220 * 4 / 3, 370],
+            // [220, 220 * 4 / 3, 370]
+        ];
+        let currentChord = 0;
+        let nextChord = () => {
+            let notes = chords[currentChord]
+            currentChord = (currentChord + 1) % chords.length
+            for (let i = 0; i < oscs.length; ++i)
+                oscs[i].frequency.setValueAtTime(220 * Math.pow(2, notes[i] / 12), t(0))
         }
+
+        nextChord()
+        return [
+            (on) => {
+                if (on) {
+                    gain.gain.linearRampToValueAtTime(0.3, t(2));
+                } else {
+                    gain.gain.setValueAtTime(0, t(0));
+                }
+            },
+            nextChord
+        ]
     }
 
     let typingProcs = Array(3).fill().map(setupTypingProcessor)
@@ -186,8 +214,10 @@ function setupAudioProcessor() {
         menuChangeFn: (isLeftRight) => {
             menuProc(isLeftRight ? 550 : 660)
         },
-        checkpoint: checkpointProc,
-        lastCheckpoint: checkpointProc,
+        checkpoint: () => {
+            checkpointProc()
+            ambientProc[1]()
+        },
         death: deathProc,
         ambient: ambientProc
     }

@@ -92,14 +92,14 @@ function init(gl, buf) {
 function setState(state) {
     gameState = state
     if (state == STATE_MENU) {
-        getAudioProcessor().ambient(false)
+        getAudioProcessor().ambient[0](false)
         updateMenuCanvas()
     } else if (state == STATE_START_CUTSCENE) {
         showCutscene(startCutsceneData, STATE_START_CUTSCENE)
     } else if (state == STATE_END) {
         showCutscene(endCutsceneData, STATE_END)
     } else if (state == STATE_GAME) {
-        getAudioProcessor().ambient(true)
+        getAudioProcessor().ambient[0](true)
         // create framebuffer here
         let divide = [4, 2, 1][gameSettings.graphics]
         ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide, ctx.fbTexData)
@@ -252,7 +252,7 @@ function render(gl) {
         if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
             if (checkpointId == 255) {
                 setState(STATE_END)
-                getAudioProcessor().lastCheckpoint()
+                getAudioProcessor().checkpoint()
                 return
             }
             if (checkpointId > player.lastCheckpointId) {
