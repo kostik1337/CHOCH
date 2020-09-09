@@ -1,6 +1,7 @@
 uniform vec2 res;
 uniform sampler2D tex;
 uniform float t;
+uniform float ef;
 
 const vec3 BLANK = vec3(0.07, 0.07, 0.13);
 
@@ -41,5 +42,5 @@ void main() {
         drawTexWithBounds(uv).g,
         drawTexWithBounds(uv+vec2(aberration, 0.)).b
     );
-    gl_FragColor = vec4(texel, 1.);
+    gl_FragColor = vec4(texel + ef, 1.);
 }

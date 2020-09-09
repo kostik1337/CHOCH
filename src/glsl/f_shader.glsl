@@ -4,10 +4,6 @@ uniform vec2 pos;
 uniform vec2 speed;
 // cam.xy = cam position, cam.zw - cam zoom
 uniform vec4 cam;
-// death factor
-uniform float df;
-// checkpoint factor
-uniform float cf;
 
 const float playerSize = 0.03;
 // room size
@@ -25,9 +21,9 @@ float smoothNoise(float x) {
   return mix(hash(floor(x)), hash(floor(x)+1.), smoothstep(0.,1.,fract(x)));
 }
 
-// copied from iq's sdf functions
 mat2 mr(float a) {float s=sin(a),c=cos(a);return mat2(c,s,-s,c);}
 
+// copied from iq's sdf functions
 float sdBox(vec2 p, vec2 b) {
   vec2 d = abs(p)-b;
   return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
@@ -473,6 +469,6 @@ void main() {
 
         vec3 c = renderAll(uv);
 
-        gl_FragColor = vec4(sqrt(c)+vec3(df,cf,0.), 1.0);
+        gl_FragColor = vec4(sqrt(c), 1.0);
     }
 }

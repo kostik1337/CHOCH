@@ -90,11 +90,11 @@ function setupAudioProcessor() {
         gain.connect(reverb);
         delayGain.connect(reverb);
 
-        let notes = [440, 220, 440]
+        let freqs = [440, 220, 440]
         let playNote = (index) => {
-            osc.frequency.setValueAtTime(notes[index], t(0))
-            osc2.frequency.setValueAtTime(notes[index] * .75, t(0))
-            attackDecay(gain.gain, 0.03, 0.3)
+            osc.frequency.setValueAtTime(freqs[index], t(0))
+            osc2.frequency.setValueAtTime(freqs[index] * .75, t(0))
+            attackDecay(gain.gain, 0.1, 0.3)
         }
         return () => {
             playNote(0)
@@ -193,7 +193,6 @@ function setupAudioProcessor() {
         setInterval(() => {
             // random chord inversions
             let notes = chords[currentChord].map((n) => n + 12 * (Math.floor(Math.random() * 3) - 1))
-            console.log(currentChord)
             setChord(notes)
         }, 5000)
 
@@ -201,7 +200,7 @@ function setupAudioProcessor() {
         return [
             (on) => {
                 if (on) {
-                    gain.gain.linearRampToValueAtTime(0.2, t(2));
+                    gain.gain.linearRampToValueAtTime(0.05, t(5));
                 } else {
                     gain.gain.setValueAtTime(0, t(0));
                 }

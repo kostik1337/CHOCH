@@ -44,9 +44,7 @@ function init(gl, buf) {
         uRes: uniformLoc("res"),
         uPos: uniformLoc("pos"),
         uCam: uniformLoc("cam"),
-        uSpeed: uniformLoc("speed"),
-        uDeathFactor: uniformLoc("df"),
-        uCheckpointFactor: uniformLoc("cf"),
+        uSpeed: uniformLoc("speed")
     };
 
     // game postproc shader
@@ -56,6 +54,7 @@ function init(gl, buf) {
         program: shaderProgram,
         uRes: uniformLoc("res"),
         uTex: uniformLoc("tex"),
+        uFactors: uniformLoc("fact"),
     }
 
     // canvas postproc shader (crt)
@@ -67,6 +66,7 @@ function init(gl, buf) {
         uRes: uniformLoc("res"),
         uTex: uniformLoc("tex"),
         uTime: uniformLoc("t"),
+        uEndFactor: uniformLoc("ef"),
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -92,14 +92,14 @@ function init(gl, buf) {
 function setState(state) {
     gameState = state
     if (state == STATE_MENU) {
-        getAudioProcessor().ambient[0](false)
+        if (audioProcessor) audioProcessor.ambient[0](false)
         updateMenuCanvas()
     } else if (state == STATE_START_CUTSCENE) {
         showCutscene(startCutsceneData, STATE_START_CUTSCENE)
     } else if (state == STATE_END) {
         showCutscene(endCutsceneData, STATE_END)
     } else if (state == STATE_GAME) {
-        getAudioProcessor().ambient[0](true)
+        if (audioProcessor) audioProcessor.ambient[0](true)
         // create framebuffer here
         let divide = [4, 2, 1][gameSettings.graphics]
         ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide, ctx.fbTexData)
@@ -116,6 +116,8 @@ function setState(state) {
             isDead: false,
             deathFactor: 0.,
             checkpointFactor: 0.,
+            endFactor: 0.,
+            isEnd: false,
 
             solidNormal: null
         }
@@ -134,6 +136,9 @@ function playerResurrect() {
 function update() {
     if (joy) joyInput(joy, onKeyEvent); // can only poll buttons, no events
 
+    if (gameState == STATE_END) {
+        player.endFactor *= 0.99
+    }
     if (gameState != STATE_GAME) return;
 
     if (player.isDead) {
@@ -141,7 +146,7 @@ function update() {
     } else {
         // @ifdef DEBUG
         let speedMul = debugInfo.fast ? 5 : 1
-        player.speed.mixEq(speedMul * player.reqSpeed.x, speedMul * player.reqSpeed.y, 0.3);
+        player.speed.mixEq(speedMul * player.reqSpeed.x, speedMul * player.reqSpeed.y, 0.2);
         // @endif
         // @ifndef DEBUG
         player.speed.mixEq(player.reqSpeed.x, player.reqSpeed.y, 0.3);
@@ -161,6 +166,10 @@ function update() {
 
     player.deathFactor *= 0.92;
     player.checkpointFactor *= 0.95;
+    if (player.isEnd) {
+        player.endFactor += (1 - player.endFactor) * 0.03
+        if (player.endFactor > 0.99) setState(STATE_END)
+    }
 
     // @ifdef DEBUG
     debugInfo.updates++;
@@ -185,6 +194,7 @@ function render(gl) {
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
         gl.uniform1f(programInfo.uTime, ctx.time);
+        gl.uniform1f(programInfo.uEndFactor, player.endFactor || 0);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     } else if (gameState == STATE_GAME) {
         // render all game stuff to texture
@@ -201,8 +211,6 @@ function render(gl) {
         // @ifndef DEBUG
         gl.uniform4f(programInfo.uCam, player.cam.x, player.cam.y, 3. * 1.3, 3.);
         // @endif
-        gl.uniform1f(programInfo.uDeathFactor, player.deathFactor);
-        gl.uniform1f(programInfo.uCheckpointFactor, player.checkpointFactor);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -216,8 +224,10 @@ function render(gl) {
         gl.useProgram(programInfo.program);
         gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
         gl.uniform1i(programInfo.uTex, 0);
+        gl.uniform3f(programInfo.uFactors, player.deathFactor, player.checkpointFactor, player.endFactor);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+        if (player.isEnd) return
         // solid check
         if (pixelValues[0] > 1
             // @ifdef DEBUG
@@ -251,7 +261,7 @@ function render(gl) {
         let checkpointId = Math.round(pixelValues[9]);
         if (isCheckpoint && checkpointId >= player.lastCheckpointId) {
             if (checkpointId == 255) {
-                setState(STATE_END)
+                player.isEnd = true
                 getAudioProcessor().checkpoint()
                 return
             }
@@ -300,11 +310,11 @@ function updateMenuCanvas() {
     // TODO: move these vars to some global place and reuse them
     let w = cctx.canvas.width, h = cctx.canvas.height
     let em = 16 * w / 1200;
-    let x = 4.1*em, lh = 4*em // line height
+    let x = 4.1 * em, lh = 4 * em // line height
 
     cctx.clearRect(0, 0, w, h)
     cctx.font = cliFont;
-    cctx.shadowBlur = .75*em;
+    cctx.shadowBlur = .75 * em;
 
     let drawMenuItem = (text, i) => {
         cctx.shadowColor = (cctx.fillStyle = i == gameSettings.currentSelection ? "#0a0" : "#bbb") + 'b';

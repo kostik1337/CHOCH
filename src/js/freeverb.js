@@ -1,5 +1,5 @@
 // everything here from https://github.com/mmckegg/freeverb, with slight modifications
-var combFilterTunings = [1557 / 44100, 1617 / 44100, 1491 / 44100, 1422 / 44100, 1277 / 44100, 1356 / 44100, 1188 / 44100, 1116 / 44100]
+var combFilterTunings = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116].map((f) => f / 44100)
 var allpassFilterFrequencies = [225, 556, 441, 341]
 
 function LowpassCombFilter(context) {
