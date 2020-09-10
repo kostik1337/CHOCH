@@ -335,7 +335,7 @@ function showCutscene(cutsceneDataFn, forState) {
     let w = cctx.canvas.width, h = cctx.canvas.height
     cctx.clearRect(0, 0, w, h)
     setTextureCanvasData()
-    print_2d(cctx, cutsceneDataFn(w, h), 16 * cctx.canvas.width / 1200,
+    return print_2d(cctx, cutsceneDataFn(w, h), 16 * cctx.canvas.width / 1200,
         () => gameState != forState,
         setTextureCanvasData,
         () => { getAudioProcessor().typingFn() }

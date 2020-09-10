@@ -203,6 +203,7 @@ function setupAudioProcessor() {
                 if (on) {
                     gain.gain.linearRampToValueAtTime(0.05, t(5));
                 } else {
+                    gain.gain.cancelScheduledValues(t(0));
                     gain.gain.setValueAtTime(0, t(0));
                 }
             },

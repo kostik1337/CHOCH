@@ -42,7 +42,7 @@ let dialogFont = "bold italic 2rem 'Lucida Sans Unicode', 'Lucida Grande', sans-
 let startCutsceneData = (w, h) => [
     `!+n;ms=50;font="${cliFont}";color='#0f0'`, "[totosz@vlt1337 ~]$ ",
     '_500',
-    "!;ms=50;color='#bbb';w=''", "hack https://asodih90xvy809.com/90as8y/",
+    "!color='#bbb';w=''", "hack https://asodih90xvy809.com/90as8y/",
 
     "!+n;ms=300", ". . .  ",
 
@@ -54,7 +54,6 @@ let startCutsceneData = (w, h) => [
 
     "<!DOCTYPE html>", "!+n",
     "<html lang=en>", "!+n",
-    "<meta charset=utf-8>", "!+n",
     "<title>Error 404 (Not Found)!!1</title>", "!+n",
     "<p>The requested URL was not found on this server. Tough luck :-)",
 
@@ -65,15 +64,15 @@ let startCutsceneData = (w, h) => [
     "!x_=x;y_=y", // save caret location
 
     '_1200',
-    `!;y=${h}-6*em;x=13*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
+    `!;y=${h}-6*em;x=17*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
     "Damn it... They moved it again.", "!+n",
     '_800',
-    `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-    `!;ms=60;y=${h}-6*em;x=13*em`, "You can hide it from me but I'll find it anyway!",
+    `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-4*em,${w},${h})`,
+    `!;ms=60;y=${h}-6*em;x=10*em`, "You can hide it from me but I'll find it anyway!",
     '_800',
-    `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
+    `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-4*em,${w},${h})`,
 
-    `!;x=x_;y=y_;ms=50;color='#bbb';w='';font="${cliFont}"`, "hack https://asodih90xvy809.com/ --find-missing-page",
+    `!;x=x_;y=y_;ms=50;color='#bbb';w='';font="${cliFont}"`, "./choch https://asodih90xvy809.com/ --find-missing-page",
     "!;ms=800", " ", "!;ms=50", "--please",
 
     '_400',
@@ -87,5 +86,34 @@ let startCutsceneData = (w, h) => [
 ];
 
 let endCutsceneData = (w, h) => [
-    `!+n;ms=100;font="${cliFont}";color='#0f0';w=''`, "Congratulations! You won!"
+    `!+n;ms=50;font="${cliFont}";color='#0f0';w='+'`, "[totosz@vlt1337 ~]$ ",
+    "_1000", 
+    "!color='#bbb';w=''", "hack https://asodih90xvy809.com/90as8y/",
+
+    "!+n;ms=300", ". . .  ",
+    "!n+n;color='#888';ms=50;w='+'",
+    "HTTP/2 ", "!color='#fff'", "200 OK", "!+n;color='#888'",
+    "content-type: text/html", "!+n",
+    "content-length: 2273", "!+n",
+    `date: ${new Date().toDateString()}`, "!n+n",
+
+    "<!DOCTYPE html>", "!+n",
+    "<html lang=en>", "!+n",
+    "<title>Hello there!</title>", "!+n",
+    "<p>You're welcome!</p>",
+    "_500", "!n+n;color='#0f0'", "[totosz@vlt1337 ~]$ ",
+
+    '_1200',
+    `!;y=${h}-6*em;x=24*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
+    "Finally... I found it.",
+
+    '_3000',
+    `!c.clearRect(0,0,${w},${h});y=2.5*em;+n;ms=50;font="${cliFont}";color='#0f0'`,
+    'CHOCH',
+    "_1500",
+    `!+n;color='#bbb'`,
+    "A game by ", `!color='#f22'`, "kostik1337", `!color='#bbb'`, " & ", `!color='#44f'`, "lampysprites",
+    "_400","!n+n;color='#bbb'",
+    "Thank you for playing!",
+    "_10000"
 ];

@@ -11,8 +11,10 @@ let layout = [
     [1,13,38],[1,16,39],[1,14,40],[1,15,37],
     // thumb
     [0,1,38],[0,16,39],[0,17,40],[0,0,37],
-    // start
-    [1,9,13],
+    // xyab - enter
+    [1,0,13],[1,1,13],[1,2,13],[1,3,13],
+    // start - escape
+    [1,9,27],
 ];
 
 
@@ -43,8 +45,11 @@ function joyInput(joy, onPressed) {
 
 function onKeyEvent(keyCode, pressed) {
     let enterPressed = keyCode == 13 && pressed
+    // arrow keys; wsad; zsqd
+    let index = [38, 40, 37, 39, 87, 83, 65, 68, 90, 87, 81, 68].indexOf(keyCode);
+    if (index >= 0) index = index % 4
+
     if (gameState == STATE_MENU) {
-        let index = [38, 40, 37, 39].indexOf(keyCode);
         if (pressed > 0) {
             if (gameSettings.currentSelection == 0 && enterPressed) {
                 setState(STATE_START_CUTSCENE)
@@ -77,8 +82,6 @@ function onKeyEvent(keyCode, pressed) {
     } else if (gameState == STATE_END) {
         if (enterPressed) setState(STATE_MENU)
     } else if (gameState == STATE_GAME) {
-        // arrow keys: left, right, up, down
-        let index = [38, 40, 37, 39].indexOf(keyCode);
         let ms = player.movementStates;
 
         ms[index] = pressed;
