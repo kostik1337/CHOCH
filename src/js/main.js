@@ -40,7 +40,13 @@ function handleResize() {
     ["glcanvas", "canvas2d"].forEach(id =>{
         const canvas = document.getElementById(id);
         canvas.width = window.innerWidth, 
-        canvas.height = window.innerHeight;
+        canvas.height = window.innerWidth * .5625;
+
+        if (canvas.height > window.innerHeight) {
+            canvas.width = window.innerHeight * 1.777 , 
+            canvas.height = window.innerHeight;
+
+        }
     });
 }
 
