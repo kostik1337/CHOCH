@@ -102,7 +102,7 @@ function setState(state) {
         if (audioProcessor) audioProcessor.ambient[0](true)
         // create framebuffer here
         let divide = [4, 2, 1][gameSettings.graphics]
-        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, ctx.canvasSize.x / divide, ctx.canvasSize.y / divide, ctx.fbTexData)
+        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, canvasW() / divide, canvasH() / divide, ctx.fbTexData)
 
         player = {
             pos: new Vec2(0, 0),
@@ -191,7 +191,7 @@ function render(gl) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.bindTexture(gl.TEXTURE_2D, ctx.canvasTex);
         gl.useProgram(programInfo.program);
-        gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
+        gl.uniform2f(programInfo.uRes, canvasW(), canvasH());
         gl.uniform1i(programInfo.uTex, 0);
         gl.uniform1f(programInfo.uTime, ctx.time);
         gl.uniform1f(programInfo.uEndFactor, player.endFactor || 0);
@@ -222,7 +222,7 @@ function render(gl) {
         programInfo = ctx.postprocProgramInfo;
         gl.bindTexture(gl.TEXTURE_2D, ctx.fbTexData[1]);
         gl.useProgram(programInfo.program);
-        gl.uniform2f(programInfo.uRes, ctx.canvasSize.x, ctx.canvasSize.y);
+        gl.uniform2f(programInfo.uRes, canvasW(), canvasH());
         gl.uniform1i(programInfo.uTex, 0);
         gl.uniform3f(programInfo.uFactors, player.deathFactor, player.checkpointFactor, player.endFactor);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -403,5 +403,4 @@ function onKeyEvent(keyCode, pressed) {
 }
 
 function onMouseMove(x, y) {
-    //player.size = x / ctx.canvasSize.x;
 }

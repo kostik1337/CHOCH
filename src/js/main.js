@@ -1,5 +1,8 @@
 var ctx = {};
 
+let canvasW = () => ctx.canvas.clientWidth
+let canvasH = () => ctx.canvas.clientHeight
+
 function main() {
     var canvas = document.querySelector('#glcanvas');
     var gl = canvas.getContext('webgl');
@@ -13,7 +16,7 @@ function main() {
     }
     // @endif
 
-    ctx.canvasSize = new Vec2(canvas.clientWidth, canvas.clientHeight);
+    ctx.canvas = canvas
     ctx.gl = gl;
 
     const buffer = initScreenQuadBuffer(gl);
@@ -28,6 +31,7 @@ function main() {
 function loop() {
     const gl = ctx.gl;
 
+    gl.viewport(0, 0, canvasW(), canvasH());
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -39,14 +43,8 @@ function loop() {
 function handleResize() {
     ["glcanvas", "canvas2d"].forEach(id =>{
         const canvas = document.getElementById(id);
-        canvas.width = window.innerWidth, 
-        canvas.height = window.innerWidth * .5625;
-
-        if (canvas.height > window.innerHeight) {
-            canvas.width = window.innerHeight * 1.777 , 
-            canvas.height = window.innerHeight;
-
-        }
+        canvas.width = window.innerWidth 
+        canvas.height = window.innerHeight
     });
 }
 
