@@ -291,7 +291,21 @@ vec2 roomSolidWait(vec2 p) {
 }
 
 vec2 roomEndCheckpoint(vec2 p) {
-  return vec2(sdBox(p, vec2(.3)), 255.);
+  float scale = 8.;
+  p.y += .7;
+  p *= scale;
+  p.x += 1.8;
+  float m = sdBox(p, vec2(.8, 1.));
+  m = max(m, -sdBox(p-vec2(-.5, .4), vec2(.4, .1)));
+  m = max(m, -sdBox(p-vec2(.5, -.2), vec2(.4, .1)));
+
+  m = min(m, sdBox(p-vec2(1.8, 0.), vec2(.8, 1.)));
+  m = max(m, -sdBox(p-vec2(1.8, 0.), vec2(.1, .5)));
+
+  m = min(m, sdBox(p-vec2(3.6, 0.), vec2(.8, 1.)));
+  m = max(m, -sdBox(p-vec2(3.6, 0.), vec2(.1, .5)));
+
+  return vec2(m/scale, 255.);
 }
 
 MapValue map(vec2 p) {
