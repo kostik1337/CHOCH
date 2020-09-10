@@ -341,7 +341,7 @@ MapValue map(vec2 p) {
 
   vec2 corrY = vec2(-1., 19. * csize.y); // 19 - rooms count, corrY.x - corridor bottom, corrY.y - corridor top
   corrY = vec2((corrY.x + corrY.y)/2., (corrY.y - corrY.x)/2.);
-  float corridor = max(abs(p.x-.5)-corridorWidth, abs(p.y - corrY.x) - corrY.y);
+  float corridor = sdBox(p-vec2(.5, corrY.x), vec2(corridorWidth, corrY.y));
   v.solid = max(v.solid, -corridor);
   
   // checkpoints

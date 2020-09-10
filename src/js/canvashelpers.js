@@ -41,7 +41,7 @@ let dialogFont = "bold italic 2rem 'Lucida Sans Unicode', 'Lucida Grande', sans-
 let logoFont = "bold 6rem Impact, Charcoal, sans-serif";
 
 let startCutsceneData = (w, h) => [
-    `!+n;ms=50;font="${cliFont}";color='#9c4'`, "[totosz@vlt1337 ~]$ ",
+    `!n+n;ms=50;font="${cliFont}";color='#9c4'`, "[totosz@vlt1337 ~]$ ",
     '_500',
     "!color='#ccc';w=''", "hack https://asodih90xvy809.com/90as8y/",
 
@@ -87,7 +87,7 @@ let startCutsceneData = (w, h) => [
 ];
 
 let endCutsceneData = (w, h) => [
-    `!+n;ms=50;font="${cliFont}";color='#9c4';w='+'`, "[totosz@vlt1337 ~]$ ",
+    `!n+n;ms=50;font="${cliFont}";color='#9c4';w='+'`, "[totosz@vlt1337 ~]$ ",
     "_1000", 
     "!color='#ccc';w=''", "hack https://asodih90xvy809.com/90as8y/",
 
