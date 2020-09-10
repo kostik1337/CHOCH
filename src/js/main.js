@@ -40,6 +40,8 @@ function handleResize() {
         const canvas = document.getElementById(id);
         canvas.width = window.innerWidth 
         canvas.height = window.innerHeight
+        em = Math.round(16 * Math.min(canvas.width, canvas.height) / 1200);
+        document.querySelector('html').style.fontSize = em + "px";
         onResize()
     });
 }
