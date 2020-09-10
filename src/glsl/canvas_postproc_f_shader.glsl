@@ -4,6 +4,7 @@ uniform float t;
 uniform float ef;
 
 const vec3 BLANK = vec3(0.07, 0.07, 0.13);
+const vec3 borderColor = vec3(.6);
 
 vec4 drawTexWithBounds(vec2 uv) {
     if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.) return vec4(0.);
@@ -23,7 +24,7 @@ vec4 drawTexWithBounds(vec2 uv) {
     //float scanlines = 1. - 0.4*smoothstep(-.8, .8,sin((uv.y+t/20.) *300.));
     float scanlines = 1. - 0.1*(sin((uv.y+t/20.) *300.)+1.);
 
-    return vec4(max(texel.rgb, vec3(7.*borderLine)), max(texel.a, borderLine)*scanlines);
+    return vec4(max(texel.rgb, vec3(borderColor*borderLine)), max(texel.a, borderLine)*scanlines);
 }
 
 vec2 distort(vec2 uv) {

@@ -116,7 +116,8 @@ gulp.task('serve', () => {
         .pipe(webserver({
             debugger: {
                 enable: false
-            }
+            },
+            host: process.env.HOST || "localhost"
         }));
 });
 
