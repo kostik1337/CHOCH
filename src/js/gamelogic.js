@@ -27,7 +27,7 @@ let debugInfo = {
 let gameSettings = {
     difficulty: 1,
     graphics: 2,
-    difficultyVariants: ["easiest", "easy", "normal", "nightmare"],
+    difficultyVariants: ["very easy", "easy", "normal", "hardcore"],
     graphicsVariants: ["low", "medium", "high"],
     currentSelection: 0
 }
@@ -136,10 +136,10 @@ function playerResurrect() {
 function update() {
     if (joy) joyInput(joy, onKeyEvent); // can only poll buttons, no events
 
-    if (gameState == STATE_END) {
-        player.endFactor *= 0.99
+    if (gameState != STATE_GAME) {
+        if (player) player.endFactor *= 0.99
+        return;
     }
-    if (gameState != STATE_GAME) return;
 
     if (player.isDead) {
         player.speed.set(0, 0)

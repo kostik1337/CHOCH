@@ -359,10 +359,37 @@ float drawLaserBounds(float p, float strength) {
   return pow(0.001 * strength / abs(p), 2.5);
 }
 
-vec3 renderLayer(vec2 uv) {
+float renderBg(vec2 uv) {
+  uv *= mat2(sqrt(3.)/2.,-.5,0.,1.);
+
+  float c = 0.;
+  const float I = 3.;
+  for(float i=0.;i<I;++i) {
+    float f = 40. + 37.*i;
+    vec2 uv1 = uv*f + t/f;
+    vec2 cuv = floor(uv1);
+    vec2 luv = fract(uv1);
+    if(luv.x+luv.y > 1.) {
+      luv = 1.-luv;
+      cuv += .5;
+    }
+    
+    float bound = .03;
+    c += max(
+      step(luv.x, bound),
+    max(
+      step(luv.y, bound),
+      step(1.-luv.x-luv.y, bound)
+    ))
+    * smoothstep(.6, .95, smoothNoise(.6*cuv.x+.5*cuv.y + .3*t + 3.*i)) * mix(1., .3, i/(I-1.));
+  }
+  return c;
+}
+
+vec4 renderLayer(vec2 uv) {
   MapValue m = map(uv);
   vec3 c = vec3(0.);
-  if(m.solid > 0.) {
+  if (m.solid > 0.) {
     vec3 checkpointColor = vec3(0.1, 1., 0.1);
     c += drawLaserBounds(m.checkpoint, 3.) * checkpointColor;
     if (m.checkpoint < 0.) {
@@ -378,8 +405,7 @@ vec3 renderLayer(vec2 uv) {
   //   c += m.solidDisplay;
   // }
   c += drawLaserBounds(m.solid, 2.);
-  //if (m.solid < 0.) c += m.solidDisplay;
-  return c;
+  return vec4(c, m.solid);
 }
 
 float sdSegment( in vec2 p, in vec2 a, in vec2 b ) {
@@ -441,7 +467,9 @@ vec3 renderAll(vec2 uv) {
       + vec2(hash2(uv+i+t)-.5, hash2(1.3*uv+i+1.4*t)-.5)*NOISE_AMP;
     uv1 = uv1 + cam.xy;
 
-    c += renderLayer(uv1) / LAYERS;
+    vec4 layer = renderLayer(uv1);
+    c += layer.rgb / LAYERS;
+    if (i == 0. && layer.a < 0.) c += .03*renderBg(uv + cam.xy / 5.);
   }
   // debug collider
   //c = mix(c, vec3(0.,0.,0.1), step(length(uv+cam.xy-pos), playerSize));

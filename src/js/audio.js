@@ -23,7 +23,7 @@ function setupAudioProcessor() {
         //param.setValueAtTime(1.0, t(0))
         param.linearRampToValueAtTime(maxVal, t(attack));
         param.linearRampToValueAtTime(minVal, t(attack + decay));
-        // param.setTargetAtTime(0.0, t(attack+hold), decay);
+        // param.setTargetAtTime(minVal, t(attack), decay/4.);
     }
 
     let createRingmodNodes = (freq1, freq2) => {
@@ -91,12 +91,13 @@ function setupAudioProcessor() {
         delayGain.connect(reverb);
 
         let freqs = [440, 220, 440]
+
         let playNote = (index) => {
             osc.frequency.setValueAtTime(freqs[index], t(0))
             osc2.frequency.setValueAtTime(freqs[index] * .75, t(0))
-            attackDecay(gain.gain, 0.1, 0.3)
         }
         return () => {
+            attackDecay(gain.gain, 0.0, .5)
             playNote(0)
             setTimeout(() => playNote(1), 1000 * delayTime / 4)
             setTimeout(() => playNote(2), 1000 * delayTime / 2)
@@ -176,7 +177,7 @@ function setupAudioProcessor() {
             [2, 5, 7],
             [0, 3, 10],
             [5, 7, 10],
-            [0, 7, 5],
+            [0, 2, 7],
         ];
         let currentChord = -1;
 
@@ -194,7 +195,7 @@ function setupAudioProcessor() {
             // random chord inversions
             let notes = chords[currentChord].map((n) => n + 12 * (Math.floor(Math.random() * 3) - 1))
             setChord(notes)
-        }, 5000)
+        }, 2000)
 
         nextChord()
         return [
