@@ -10,6 +10,14 @@ const float playerSize = 0.03;
 const vec2 csize = vec2(1., 2.5);
 const vec2 axis60 = vec2(sqrt(3.)/2., .5), axis60N = vec2(-sqrt(3.)/2., .5);
 
+const vec3 checkpointColor = vec3(0.1, 1., 0.1);
+const vec3 checkpointBgColor = checkpointColor/10.;
+const vec3 deadlyColor = vec3(1.,.1,.1);
+const vec3 deadlyBgColor = deadlyColor / 10.;
+const vec3 solidColor = vec3(1.);
+const vec3 backgroundDecorColor = vec3(.03);
+const vec3 bgColor = vec3(0.07, 0.07, 0.13);
+
 #define PI 3.14159265
 #define LAYERS 6.0
 #define NOISE_AMP 0.0
@@ -390,21 +398,16 @@ vec4 renderLayer(vec2 uv) {
   MapValue m = map(uv);
   vec3 c = vec3(0.);
   if (m.solid > 0.) {
-    vec3 checkpointColor = vec3(0.1, 1., 0.1);
     c += drawLaserBounds(m.checkpoint, 3.) * checkpointColor;
     if (m.checkpoint < 0.) {
-      c += checkpointColor/10.;
+      c += checkpointBgColor;
     }
     else {
-      vec3 deadlyColor = vec3(1.,.1,.1);
       c += drawLaserBounds(m.deadly, 3.) * deadlyColor;
-      if (m.deadly < 0.) c += deadlyColor/10.;
+      if (m.deadly < 0.) c += deadlyBgColor;
     }
   }
-  // if (m.solidDisplay > 0.) {
-  //   c += m.solidDisplay;
-  // }
-  c += drawLaserBounds(m.solid, 2.);
+  c += solidColor * drawLaserBounds(m.solid, 2.);
   return vec4(c, m.solid);
 }
 
@@ -469,7 +472,7 @@ vec3 renderAll(vec2 uv) {
 
     vec4 layer = renderLayer(uv1);
     c += layer.rgb / LAYERS;
-    if (i == 0. && layer.a < 0.) c += .03*renderBg(uv + cam.xy / 5.);
+    if (i == 0. && layer.a < 0.) c += backgroundDecorColor * renderBg(uv + cam.xy / 5.);
   }
   // debug collider
   //c = mix(c, vec3(0.,0.,0.1), step(length(uv+cam.xy-pos), playerSize));
@@ -497,6 +500,6 @@ void main() {
 
         vec3 c = renderAll(uv);
 
-        gl_FragColor = vec4(sqrt(c), 1.0);
+        gl_FragColor = vec4(bgColor + sqrt(c), 1.0);
     }
 }

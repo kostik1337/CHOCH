@@ -32,8 +32,6 @@ function loop() {
     const gl = ctx.gl;
 
     gl.viewport(0, 0, canvasW(), canvasH());
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
     render(gl);
 
@@ -45,6 +43,7 @@ function handleResize() {
         const canvas = document.getElementById(id);
         canvas.width = window.innerWidth 
         canvas.height = window.innerHeight
+        onResize()
     });
 }
 

@@ -65,11 +65,11 @@ let startCutsceneData = (w, h) => [
     "!x_=x;y_=y", // save caret location
 
     '_1200',
-    `!;y=38*em;x=13*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
+    `!;y=${h}-6*em;x=13*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
     "Damn it... They moved it again.", "!+n",
     '_800',
     `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
-    "!;ms=60;y=38*em;x=13*em", "You can hide it from me but I'll find it anyway!",
+    `!;ms=60;y=${h}-6*em;x=13*em`, "You can hide it from me but I'll find it anyway!",
     '_800',
     `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-60,${w},${h})`,
 

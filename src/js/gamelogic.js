@@ -89,6 +89,11 @@ function init(gl, buf) {
     // @endif
 }
 
+function recreateGameFramebufferAndTex() {
+    let divide = [4, 2, 1][gameSettings.graphics]
+    ctx.fbTexData = createFramebufferWithTexture(ctx.gl, canvasW() / divide, canvasH() / divide, ctx.fbTexData)
+}
+
 function setState(state) {
     gameState = state
     if (state == STATE_MENU) {
@@ -99,10 +104,9 @@ function setState(state) {
     } else if (state == STATE_END) {
         showCutscene(endCutsceneData, STATE_END)
     } else if (state == STATE_GAME) {
+        ctx.time = 0
         if (audioProcessor) audioProcessor.ambient[0](true)
-        // create framebuffer here
-        let divide = [4, 2, 1][gameSettings.graphics]
-        ctx.fbTexData = createFramebufferWithTexture(ctx.gl, canvasW() / divide, canvasH() / divide, ctx.fbTexData)
+        recreateGameFramebufferAndTex()
 
         player = {
             pos: new Vec2(0, 0),
@@ -400,6 +404,11 @@ function onKeyEvent(keyCode, pressed) {
         }
         // @endif
     }
+}
+
+function onResize() {
+    if (gameState == STATE_MENU) updateMenuCanvas()
+    else if (gameState == STATE_GAME) recreateGameFramebufferAndTex()
 }
 
 function onMouseMove(x, y) {
