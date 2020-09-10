@@ -38,6 +38,7 @@ async function print_2d(c, text, em, cancelFn, textUpdatedCb, typingCb) {
 
 let cliFont = "bold 1.4rem 'Andale Mono', 'Courier New', monospace";
 let dialogFont = "bold italic 2rem 'Lucida Sans Unicode', 'Lucida Grande', sans-serif";
+let logoFont = "bold 6rem Impact, Charcoal, sans-serif";
 
 let startCutsceneData = (w, h) => [
     `!+n;ms=50;font="${cliFont}";color='#9c4'`, "[totosz@vlt1337 ~]$ ",

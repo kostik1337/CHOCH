@@ -317,16 +317,24 @@ function updateMenuCanvas() {
     let x = 4.1 * em, lh = 4 * em // line height
 
     cctx.clearRect(0, 0, w, h)
-    cctx.font = cliFont;
     cctx.shadowBlur = .75 * em;
 
     let drawMenuItem = (text, i) => {
+        cctx.font = cliFont;
         cctx.shadowColor = (cctx.fillStyle = i == gameSettings.currentSelection ? "#9c4" : "#999") + 'b';
         cctx.fillText(text, x, h / 2 - lh * 3 / 2 + lh * i);
     }
     drawMenuItem("play", 0)
     drawMenuItem(`difficulty: ${gameSettings.difficultyVariants[gameSettings.difficulty]}`, 1)
     drawMenuItem(`graphics: ${gameSettings.graphicsVariants[gameSettings.graphics]}`, 2)
+
+    cctx.font = logoFont;
+    cctx.shadowColor = cctx.fillStyle = "#742";
+    cctx.strokeStyle="#fa7";
+    cctx.fillText(" >Ч  О  Ч<", w/2, h/2-em);
+    cctx.strokeText("> Ч О Ч <", w/2, h/2-em);
+    cctx.font = cliFont;
+    cctx.fillText(" ..e.g.g.o.g..c.h.o.c.h..", w/2, h/2+em);
 
     setTextureCanvasData()
 }
