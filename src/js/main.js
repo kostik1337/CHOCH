@@ -23,9 +23,6 @@ function main() {
     init(gl, buffer)
 
     loop();
-    const rect = canvas.getBoundingClientRect();
-    canvas.addEventListener('mousemove',
-        e => onMouseMove(e.clientX - rect.left, e.clientY - rect.top));
 }
 
 function loop() {

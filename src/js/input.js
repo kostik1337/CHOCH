@@ -91,11 +91,16 @@ function onKeyEvent(keyCode, pressed) {
             (ms[0] - ms[1]) * speed
         )
 
+        if (keyCode == 27) {
+            setState(STATE_MENU)
+        }
+
+        // @ifdef DEBUG
+
         // shift to move fast
         if (keyCode == 16) {
             debugInfo.fast = (pressed != 0)
         }
-        // @ifdef DEBUG
         if (pressed != 0) {
             // '1' or '2'
             if (keyCode == 49 || keyCode == 50) debugInfo.camZoom = (keyCode == 50 ? .7 : 3)
@@ -106,7 +111,4 @@ function onKeyEvent(keyCode, pressed) {
         }
         // @endif
     }
-}
-
-function onMouseMove(x, y) {
 }
