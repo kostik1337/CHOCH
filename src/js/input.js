@@ -26,17 +26,15 @@ function joyInput(joy, onPressed) {
 
         if (type === BUTTON) {
             let b = joy.buttons[idx];
-            pressed = b && b.pressed; // gamepad might not have that many buttons
-            
-            if (pressed !== repeat)
-                onPressed(keycode, pressed);
+            pressed = b && b.pressed ? 1 : 0; // gamepad might not have that many buttons
         } else {
             let v = joy.axes[idx % 16];
-            pressed = (Math.abs(v) > joyDeadzone) && ((v > 0) == (idx > 15));
-            
-            if (pressed !== repeat)
-                onPressed(keycode, Math.abs(v));
+            pressed = (v > 0) == (idx > 15) ? Math.abs(v) : 0;
+            if (pressed < joyDeadzone) pressed = 0;
         }
+            
+        if (pressed !== repeat)
+            onPressed(keycode, pressed ? 1 : 0);
         
         binding[3] = pressed;
     });
@@ -47,7 +45,7 @@ function onKeyEvent(keyCode, pressed) {
     let enterPressed = keyCode == 13 && pressed
     if (gameState == STATE_MENU) {
         let index = [38, 40, 37, 39].indexOf(keyCode);
-        if (pressed) {
+        if (pressed > 0) {
             if (gameSettings.currentSelection == 0 && enterPressed) {
                 setState(STATE_START_CUTSCENE)
                 getAudioProcessor().menuChangeFn(true)
@@ -86,16 +84,16 @@ function onKeyEvent(keyCode, pressed) {
         ms[index] = pressed;
         let speed = player.maxVelocity;
         player.reqSpeed.set(
-            ms[2] ? -speed : ms[3] ? speed : 0,
-            ms[0] ? speed : ms[1] ? -speed : 0
+            (ms[3] - ms[2]) * speed,
+            (ms[0] - ms[1]) * speed
         )
 
         // shift to move fast
         if (keyCode == 16) {
-            debugInfo.fast = pressed
+            debugInfo.fast = (pressed != 0)
         }
         // @ifdef DEBUG
-        if (pressed) {
+        if (pressed != 0) {
             // '1' or '2'
             if (keyCode == 49 || keyCode == 50) debugInfo.camZoom = (keyCode == 50 ? .7 : 3)
             else if (keyCode == 71) debugInfo.godmode = !debugInfo.godmode // 'g'

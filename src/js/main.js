@@ -50,8 +50,8 @@ function handleResize() {
 var keyFunction = (e, pressed) => {
     if (!e.repeat) onKeyEvent(e.which, pressed)
 };
-window.addEventListener('keydown', e => keyFunction(e, true));
-window.addEventListener('keyup', e => keyFunction(e, false));
+window.addEventListener('keydown', e => keyFunction(e, 1));
+window.addEventListener('keyup', e => keyFunction(e, 0));
 window.addEventListener('load', main, false);
 window.addEventListener('resize', handleResize);
 window.setInterval(() => update(), 16);
