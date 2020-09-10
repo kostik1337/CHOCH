@@ -47,7 +47,7 @@ gulp.task('concat', () => {
         "canvashelpers.js",
         "gamelogic.js",
         "main.js",
-        "joystick.js"
+        "input.js"
     ].map((v) => `${buildDir}/js/${v}`)
     return gulp.src(files)
         .pipe(concat('all.js'))
