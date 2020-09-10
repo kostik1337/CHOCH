@@ -80,7 +80,7 @@ function onKeyEvent(keyCode, pressed) {
     } else if (gameState == STATE_START_CUTSCENE) {
         if (enterPressed) setState(STATE_GAME)
     } else if (gameState == STATE_END) {
-        if (enterPressed) setState(STATE_MENU)
+        //if (enterPressed) setState(STATE_MENU)
     } else if (gameState == STATE_GAME) {
         let ms = player.movementStates;
 
