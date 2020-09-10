@@ -321,7 +321,7 @@ function updateMenuCanvas() {
     cctx.shadowBlur = .75 * em;
 
     let drawMenuItem = (text, i) => {
-        cctx.shadowColor = (cctx.fillStyle = i == gameSettings.currentSelection ? "#0a0" : "#bbb") + 'b';
+        cctx.shadowColor = (cctx.fillStyle = i == gameSettings.currentSelection ? "#9c4" : "#999") + 'b';
         cctx.fillText(text, x, h / 2 - lh * 3 / 2 + lh * i);
     }
     drawMenuItem("play", 0)

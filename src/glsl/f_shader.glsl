@@ -12,10 +12,10 @@ const vec2 axis60 = vec2(sqrt(3.)/2., .5), axis60N = vec2(-sqrt(3.)/2., .5);
 
 const vec3 checkpointColor = vec3(0.5, 9., 0.4);
 const vec3 checkpointBgColor = checkpointColor/5.;
-const vec3 deadlyColor = vec3(3.5,.5,.1);
+const vec3 deadlyColor = vec3(3.5,.5,.1) / 2.;
 const vec3 deadlyBgColor = deadlyColor / 6.;
-const vec3 solidColor = vec3(1.2,1.2,1.5);
-const vec3 backgroundDecorColor = -vec3(.07,0.001,0.0);
+const vec3 solidColor = vec3(.8,.8,1.);
+const vec3 backgroundDecorColor = vec3(.03);
 const vec3 bgColor = vec3(0.07, 0.07, 0.13);
 
 #define PI 3.14159265
