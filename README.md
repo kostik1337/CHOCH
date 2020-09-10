@@ -5,7 +5,7 @@ A 10-20 minutes long game about a web crawler, metaphorized as spider, scraping 
 
 After playing through the intro scene some might object that a moved page must be HTTP code 301. However, with a proper redirect, no adventure could've taken place. Please add this to the list of things that fiction did horribly incorrect.
 
-This project was made for [js13k](https://js13kgames.com) event. Another cool thing besides fitting into a 13k bundle, is the graphics code handled by a single shader program, sans menus that only have cool post-effect.
+This project was made for [js13k](https://js13kgames.com) event. Another cool thing besides fitting into a 13k bundle, is the graphics code handled by a single shader program (with another one for postprocessing), sans menus that only have cool post-effect.
 
 ## Building and Running
 ### Debug
@@ -36,4 +36,4 @@ output files are written to ./build/
 
 ### License
 WTFPL2 applies. See LICENSE.md for details.
-This project includes code by [Freeverb](https://github.com/mmckegg/freeverb) available under MIT license
+This project includes code from [Freeverb](https://github.com/mmckegg/freeverb) (see file src/js/freeverb.js) available under MIT license
