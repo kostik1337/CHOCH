@@ -7,7 +7,7 @@ async function print_2d(c, text, em, cancelFn, textUpdatedCb, typingCb) {
         font,
         color = "#9c4",
         typing = true,
-        n = { valueOf() { y += 1.4 * em; x = 0.7 * em; } },
+        n = { valueOf() { y += 1.4 * em; x = 1.0 * em; } },
         wait = (t) => new Promise(resolve => setTimeout(resolve, t))
 
     while (tail) {
@@ -69,7 +69,7 @@ let startCutsceneData = (w, h) => [
     "@#$%! *They* moved the page again.", "!+n",
     '_800',
     `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-4*em,${w},${h})`,
-    `!;ms=60;y=${h}-6*em;x=10*em`, "You can hide it but I'll find it anyway!",
+    `!;ms=60;y=${h}-6*em;x=17*em`, "You can hide it but I'll find it anyway!",
     '_800',
     `!;c.fillStyle='#000';c.shadowBlur=0;c.clearRect(0,y-4*em,${w},${h})`,
 
