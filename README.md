@@ -1,6 +1,8 @@
 # еггог ЧОЧ 
 ## eggog CHOCH
 
+[[js3k entry](https://js13kgames.com/entries/choch)] [[itch.io](https://kostik1337.itch.io/choch)]
+
 A 10-20 minutes long game about a web crawler, metaphorized as spider, scraping the private network, metaprhorized as 2d space full of deadly lazers, looking for the oh-so-important missing page of unknown content.
 
 After playing through the intro scene some might object that a moved page must be HTTP code 301. However, with a proper redirect, no adventure could've taken place. Please add this to the list of things that fiction did horribly incorrect.
