@@ -86,35 +86,42 @@ let startCutsceneData = (w, h) => [
     "!w='';ms=200", ". . .  "
 ];
 
-let endCutsceneData = (w, h) => [
-    `!n+n;ms=50;font="${cliFont}";color='#9c4';w='+'`, "[totosz@vlt1337 ~]$ ",
-    "_1000", 
-    "!color='#ccc';w=''", "hack https://asodih90xvy809.com/90as8y/",
+let endCutsceneData = (w, h, isSpeedrun, timerTime, difficulty) => {
+    let speedrunElements = isSpeedrun ? [
+        `overall-time: ${timerTime}`, "!+n",
+        `difficulty: ${difficulty}`, "!+n",
+    ] : []
+    return [
+        `!n+n;ms=50;font="${cliFont}";color='#9c4';w='+'`, "[totosz@vlt1337 ~]$ ",
+        "_1000",
+        "!color='#ccc';w=''", "hack https://asodih90xvy809.com/90as8y/",
 
-    "!+n;ms=300", ". . .  ",
-    "!n+n;color='#ccc';ms=50;w='+'",
-    "HTTP/2 ", "!color='#fff'", "200 OK", "!+n;color='#ccc'",
-    "content-type: text/html", "!+n",
-    "content-length: 2273", "!+n",
-    `date: ${new Date().toDateString()}`, "!n+n",
+        "!+n;ms=300", ". . .  ",
+        "!n+n;color='#ccc';ms=50;w='+'",
+        "HTTP/2 ", "!color='#fff'", "200 OK", "!+n;color='#ccc'",
+        "content-type: text/html", "!+n",
+        "content-length: 2273", "!+n",
+        ...speedrunElements,
+        `date: ${new Date().toDateString()}`, "!n+n",
 
-    "<!DOCTYPE html>", "!+n",
-    "<html lang=en>", "!+n",
-    "<title>Hello there!</title>", "!+n",
-    "<p>You're welcome!</p>",
-    "_500", "!n+n;color='#9c4'", "[totosz@vlt1337 ~]$ ",
+        "<!DOCTYPE html>", "!+n",
+        "<html lang=en>", "!+n",
+        "<title>Hello there!</title>", "!+n",
+        `<p>${isSpeedrun ? "How did you get here so fast?!" : "You're welcome!"}</p>`,
+        "_500", "!n+n;color='#9c4'", "[totosz@vlt1337 ~]$ ",
 
-    '_1200',
-    `!;y=${h}-6*em;x=24*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
-    "Finally... I found it.",
+        '_1200',
+        `!;y=${h}-6*em;x=24*em;ms=60;w='';color='#f80';font="${dialogFont}"`,
+        "Finally... I found it.",
 
-    '_3000',
-    `!c.clearRect(0,0,${w},${h});y=2.5*em;+n;ms=50;font="${cliFont}";color='#9c4'`,
-    'CHOCH',
-    "_1500",
-    `!+n;color='#ccc'`,
-    "A game by ", `!color='#f22'`, "kostik1337", `!color='#ccc'`, " & ", `!color='#44f'`, "lampysprites",
-    "_400","!n+n;color='#ccc'",
-    "Thank you for playing!",
-    "_10000"
-];
+        `_${isSpeedrun ? 10000 : 3000}`,
+        `!c.clearRect(0,0,${w},${h});y=2.5*em;+n;ms=50;font="${cliFont}";color='#9c4'`,
+        'CHOCH',
+        "_1500",
+        `!+n;color='#ccc'`,
+        "A game by ", `!color='#f22'`, "kostik1337", `!color='#ccc'`, " & ", `!color='#44f'`, "lampysprites",
+        "_400", "!n+n;color='#ccc'",
+        "Thank you for playing!",
+        "_10000"
+    ];
+}

@@ -29,7 +29,8 @@ let gameSettings = {
     graphics: 2,
     difficultyVariants: ["very easy", "easy", "normal", "hardcore"],
     graphicsVariants: ["low", "medium", "high"],
-    currentSelection: 0
+    currentSelection: 0,
+    speedrunMode: false
 }
 
 function init(gl, buf) {
@@ -74,6 +75,8 @@ function init(gl, buf) {
     gl.vertexAttribPointer(attrPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(attrPosition);
 
+    updateSpeedrunMode();
+
     // @ifdef DEBUG
     setState(STATE_MENU)
     // @endif
@@ -94,6 +97,10 @@ function recreateGameFramebufferAndTex() {
     ctx.fbTexData = createFramebufferWithTexture(ctx.gl, canvasW() / divide, canvasH() / divide, ctx.fbTexData)
 }
 
+function updateSpeedrunMode() {
+    document.querySelector("#timer").style.visibility = gameSettings.speedrunMode ? "visible" : "hidden";
+}
+
 function setState(state) {
     gameState = state
     if (state == STATE_MENU) {
@@ -102,9 +109,13 @@ function setState(state) {
     } else if (state == STATE_START_CUTSCENE) {
         showCutscene(startCutsceneData, STATE_START_CUTSCENE)
     } else if (state == STATE_END) {
-        showCutscene(endCutsceneData, STATE_END)
+        showCutscene((w, h)=>endCutsceneData(w, h, gameSettings.speedrunMode,
+            document.querySelector("#timer").innerHTML,
+            gameSettings.difficultyVariants[gameSettings.difficulty]), STATE_END)
     } else if (state == STATE_GAME) {
         ctx.time = 0
+        ctx.timerTimeStart = new Date().getTime()
+
         if (audioProcessor) audioProcessor.ambient[0](true)
         recreateGameFramebufferAndTex()
 
@@ -137,12 +148,24 @@ function playerResurrect() {
     player.pos.set(player.lastCheckpointPos.x, player.lastCheckpointPos.y)
 }
 
+function timerTimeFormat() {
+    const t = new Date().getTime() - ctx.timerTimeStart
+    const ms = t%1000, s = Math.floor(t/1000)%60, m = Math.floor(t/1000/60)
+    const leftPad2 = (v) => v < 10 ? `0${v}` : v
+    const leftPadMs = (v) => v < 10 ? `00${v}` : v < 100 ? `0${v}` : v
+    return `${leftPad2(m)}:${leftPad2(s)}:${leftPadMs(ms)}`;
+}
+
 function update() {
     if (joy) joyInput(joy, onKeyEvent); // can only poll buttons, no events
 
     if (gameState != STATE_GAME) {
         if (player) player.endFactor *= 0.99
         return;
+    }
+
+    if (gameSettings.speedrunMode) {
+        document.querySelector("#timer").innerHTML = timerTimeFormat()
     }
 
     if (player.isDead) {
@@ -330,11 +353,11 @@ function updateMenuCanvas() {
 
     cctx.font = logoFont;
     cctx.shadowColor = cctx.fillStyle = "#742";
-    cctx.strokeStyle="#fa7";
-    cctx.fillText(" >Ч  О  Ч<", w/2, h/2-em);
-    cctx.strokeText("> Ч О Ч <", w/2, h/2-em);
+    cctx.strokeStyle = "#fa7";
+    cctx.fillText(" >Ч  О  Ч<", w / 2, h / 2 - em);
+    cctx.strokeText("> Ч О Ч <", w / 2, h / 2 - em);
     cctx.font = cliFont;
-    cctx.fillText(" ..e.g.g.o.g..c.h.o.c.h..", w/2, h/2+em);
+    cctx.fillText(" ..e.g.g.o.g..c.h.o.c.h..", w / 2, h / 2 + em);
 
     setTextureCanvasData()
 }

@@ -8,17 +8,17 @@ const BUTTON = 1;
 // add 16 to axis value to invert it
 let layout = [
     // dpad
-    [1,13,38],[1,16,39],[1,14,40],[1,15,37],
+    [1, 13, 38], [1, 16, 39], [1, 14, 40], [1, 15, 37],
     // thumb
-    [0,1,38],[0,16,39],[0,17,40],[0,0,37],
+    [0, 1, 38], [0, 16, 39], [0, 17, 40], [0, 0, 37],
     // xyab - enter
-    [1,0,13],[1,1,13],[1,2,13],[1,3,13],
+    [1, 0, 13], [1, 1, 13], [1, 2, 13], [1, 3, 13],
     // start - escape
-    [1,9,27],
+    [1, 9, 27],
 ];
 
 
-window.addEventListener("gamepadconnected", e=>joy=e.gamepad);
+window.addEventListener("gamepadconnected", e => joy = e.gamepad);
 
 
 function joyInput(joy, onPressed) {
@@ -34,10 +34,10 @@ function joyInput(joy, onPressed) {
             pressed = (v > 0) == (idx > 15) ? Math.abs(v) : 0;
             if (pressed < joyDeadzone) pressed = 0;
         }
-            
+
         if (pressed !== repeat)
             onPressed(keycode, pressed ? 1 : 0);
-        
+
         binding[3] = pressed;
     });
 }
@@ -48,6 +48,20 @@ function onKeyEvent(keyCode, pressed) {
     // arrow keys; wsad; zsqd
     let index = [38, 40, 37, 39, 87, 83, 65, 68, 90, 87, 81, 68].indexOf(keyCode);
     if (index >= 0) index = index % 4
+
+    // t
+    if (keyCode == 84 && pressed) {
+        gameSettings.speedrunMode = !gameSettings.speedrunMode
+        updateSpeedrunMode()
+    }
+
+    // r
+    if (gameSettings.speedrunMode &&
+        (gameState == STATE_START_CUTSCENE || gameState == STATE_GAME || gameState == STATE_END) &&
+        keyCode == 82) {
+        setState(STATE_GAME)
+        return
+    }
 
     if (gameState == STATE_MENU) {
         if (pressed > 0) {
